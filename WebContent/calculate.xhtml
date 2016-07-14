@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core">
+<h:head>
+	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+	<h:outputStylesheet library="css" name="default.css" />
+	<title>Calculations</title>
+</h:head>
+<h:body>
+	<f:view>
+		<h:form>
+			<h1>Key Component selections</h1>
+			<h3>Calculate and view</h3>
+			<p></p>
+		</h:form>
+
+		<h:form>
+			<p></p>
+			<h:commandButton id="calcHomogeniser" value="Homogeniser"
+				action="resultHomogeniser">
+			</h:commandButton>
+		</h:form>
+
+		<h:form>
+			<p></p>
+			<h:commandButton id="calcSeparator" value="Separator"
+				action="resultSeparator">
+			</h:commandButton>
+		</h:form>
+
+		<h:form>
+			<p></p>
+			<h:commandButton id="calcPHE" value="Plate Heat Exchanger"
+				action="resultPlateHeatExchanger">
+			</h:commandButton>
+		</h:form>
+
+		<h:form>
+			<p></p>
+			<h:commandButton id="calcTHE" value="Tubular Heat Exchanger"
+				action="resultTubularHeatExchanger">
+			</h:commandButton>
+		</h:form>
+
+		<h:form>
+			<p></p>
+			<h:commandButton id="calcFrigusFreezer" value="Freezer"
+				action="resultFrigusFreezer">
+			</h:commandButton>
+		</h:form>
+
+		<p></p>
+		<h2>Select new customer</h2>
+		<p></p>
+
+		<h:form>
+			<p></p>
+			<h:commandButton id="newCustomer" value="New customer" action="index">
+			</h:commandButton>
+		</h:form>
+
+	</f:view>
+</h:body>
+</html>
