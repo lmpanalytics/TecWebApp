@@ -13,6 +13,7 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.annotation.security.DeclareRoles;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -36,7 +37,9 @@ import org.neo4j.driver.v1.exceptions.ClientException;
  * serializable, but beans that use request scope do not have to be
  * serializable.
  */
+@DeclareRoles({ "CENTRAL_TEAM", "TutorialUser" })
 public class HomogeniserBean implements Serializable {
+	// public class HomogeniserBean {
 
 	private static final long serialVersionUID = 1L;
 

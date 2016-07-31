@@ -19,35 +19,35 @@
 		<h:form>
 			<p></p>
 			<h:commandButton id="calcHomogeniser" value="Homogeniser"
-				action="resultHomogeniser">
+				action="resultHomogeniser" rendered="#{customerSetBean.isRenderTPPC()}">
 			</h:commandButton>
 		</h:form>
 
 		<h:form>
 			<p></p>
 			<h:commandButton id="calcSeparator" value="Separator"
-				action="resultSeparator">
+				action="resultSeparator" rendered="#{customerSetBean.isRenderTPPC()}">
 			</h:commandButton>
 		</h:form>
 
 		<h:form>
 			<p></p>
 			<h:commandButton id="calcPHE" value="Plate Heat Exchanger"
-				action="resultPlateHeatExchanger">
+				action="resultPlateHeatExchanger" rendered="#{customerSetBean.isRenderTPPC()}">
 			</h:commandButton>
 		</h:form>
 
 		<h:form>
 			<p></p>
 			<h:commandButton id="calcTHE" value="Tubular Heat Exchanger"
-				action="resultTubularHeatExchanger">
+				action="resultTubularHeatExchanger" rendered="#{customerSetBean.isRenderTPPC()}">
 			</h:commandButton>
 		</h:form>
 
 		<h:form>
 			<p></p>
-			<h:commandButton id="calcFrigusFreezer" value="Freezer"
-				action="resultFrigusFreezer">
+			<h:commandButton id="calcFrigusFreezer" value="Freezer" 
+				action="resultFrigusFreezer" rendered="#{customerSetBean.isRenderBUIC()}">
 			</h:commandButton>
 		</h:form>
 

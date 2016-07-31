@@ -1,51 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" id="WebApp_ID" version="3.1">
-  <display-name>TecWebApp</display-name>
-  <context-param>
-    <description>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+	id="WebApp_ID" version="3.1">
+	<display-name>TecWebApp</display-name>
+	<context-param>
+		<description>
             Tell the runtime where we are in the project development
             lifecycle.  Valid values are: 
             Development, UnitTest, SystemTest, or Production.
             The runtime will display helpful hints to correct common mistakes
             when the value is Development.
         </description>
-    <param-name>javax.faces.PROJECT_STAGE</param-name>
-    <param-value>Production</param-value>
-  </context-param>
-  <welcome-file-list>
-    <welcome-file>index.xhtml</welcome-file>
-  </welcome-file-list>
-  <servlet>
-    <servlet-name>Faces Servlet</servlet-name>
-    <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
-    <load-on-startup>1</load-on-startup>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>Faces Servlet</servlet-name>
-    <url-pattern>*.xhtml</url-pattern>
-  </servlet-mapping>
-  <security-constraint>
-    <display-name>Constraint1</display-name>
-    <web-resource-collection>
-      <web-resource-name>wrcoll</web-resource-name>
-      <description></description>
-      <url-pattern>/*</url-pattern>
-    </web-resource-collection>
-    <auth-constraint>
-      <description></description>
-      <role-name>CENTRAL_TEAM</role-name>
-    </auth-constraint>
-  </security-constraint>
-  <login-config>
-    <auth-method>FORM</auth-method>
-    <realm-name>file</realm-name>
-    <form-login-config>
-      <form-login-page>/login.html</form-login-page>
-      <form-error-page>/error.html</form-error-page>
-    </form-login-config>
-  </login-config>
-  <security-role>
-    <description></description>
-    <role-name>CENTRAL_TEAM</role-name>
-  </security-role>
+		<param-name>javax.faces.PROJECT_STAGE</param-name>
+		<param-value>Production</param-value>
+	</context-param>
+	<welcome-file-list>
+		<welcome-file>index.xhtml</welcome-file>
+	</welcome-file-list>
+	<servlet>
+		<servlet-name>Faces Servlet</servlet-name>
+		<servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>Faces Servlet</servlet-name>
+		<url-pattern>*.xhtml</url-pattern>
+	</servlet-mapping>
+	<security-constraint>
+		<display-name>Constraint1</display-name>
+		<web-resource-collection>
+			<web-resource-name>wrcoll</web-resource-name>
+			<description></description>
+			<url-pattern>/*</url-pattern>
+		</web-resource-collection>
+		<auth-constraint>
+			<description></description>
+			<role-name>CENTRAL_TEAM</role-name>
+			<role-name>TPPC</role-name>
+			<role-name>BUIC</role-name>
+			<role-name>ECA</role-name>
+			<role-name>GC</role-name>
+			<role-name>GMEA</role-name>
+			<role-name>NCSA</role-name>
+			<role-name>SAEAO</role-name>
+		</auth-constraint>
+	</security-constraint>
+	<login-config>
+		<auth-method>FORM</auth-method>
+		<realm-name>file</realm-name>
+		<form-login-config>
+			<form-login-page>/login.html</form-login-page>
+			<form-error-page>/error.html</form-error-page>
+		</form-login-config>
+	</login-config>
 </web-app>
