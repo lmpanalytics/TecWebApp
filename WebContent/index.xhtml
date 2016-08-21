@@ -14,7 +14,7 @@
 		<h:form>
 			<!-- 			<h:graphicImage url="#{resource['images:Alex_TD_valve.png']}" alt="Valve pic" /> -->
 			<h1>Market and Customer Selections</h1>
-			<h3>Select Cluster, Market group, Customer group and Final
+			<h3>Select Cluster, Market group, Market, Customer group and Final
 				customer number</h3>
 			<p></p>
 		</h:form>
@@ -48,6 +48,25 @@
 
 			</h:selectOneMenu>
 			<h:commandButton id="applyMarketGroup" value="Apply"
+				action="#{customerSetBean.queryMarketSet}">
+			</h:commandButton>
+		</h:form>
+
+		<h:form>
+			<!-- 			<h:graphicImage url="#{resource['images:Alex_TD_valve.png']}" alt="Valve pic" /> -->
+			<p></p>
+		</h:form>
+		
+		<h:form>
+			<p></p>
+			<h:selectOneMenu id="marketSet" title="Markets"
+				required="true" value="#{customerSetBean.selectedMarket}"
+				requiredMessage="Select a market">
+				<f:selectItem itemLabel="Choose market .." itemValue="#{null}" />
+				<f:selectItems value="#{customerSetBean.marketSet}" />
+
+			</h:selectOneMenu>
+			<h:commandButton id="applyMarket" value="Apply"
 				action="#{customerSetBean.queryCustGroupSet}">
 			</h:commandButton>
 		</h:form>

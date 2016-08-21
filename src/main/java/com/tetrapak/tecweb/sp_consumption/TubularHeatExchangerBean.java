@@ -45,6 +45,7 @@ public class TubularHeatExchangerBean implements Serializable {
 	private final int CONSUMPTION_HURDLE_YEAR = LocalDate.now().minusYears(3).getYear();
 	private String cluster;
 	private String marketGroup;
+	private String market;
 	private String customerGroup;
 	private String customerNumber;
 
@@ -81,6 +82,7 @@ public class TubularHeatExchangerBean implements Serializable {
 
 		cluster = customerSetBean.getSelectedCluster();
 		marketGroup = customerSetBean.getSelectedMarketGroup();
+		market = customerSetBean.getSelectedMarket();
 		customerGroup = customerSetBean.getSelectedCustGroup();
 		customerNumber = customerSetBean.getSelectedCustNumber();
 
@@ -131,6 +133,7 @@ public class TubularHeatExchangerBean implements Serializable {
 	private void makeClientSelectionConstraints() {
 		String txCluster;
 		String txMarketGroup;
+		String txMarket;
 		String txCustomerGroup;
 		String txCustomerNumber;
 
@@ -144,6 +147,11 @@ public class TubularHeatExchangerBean implements Serializable {
 		} else {
 			txMarketGroup = "mg.name = '" + marketGroup + "' AND ";
 		}
+		if (market.equals("ALL MARKETS")) {
+			txMarket = "";
+		} else {
+			txMarket = "m.name = '" + market + "' AND ";
+		}
 		if (customerGroup.equals("ALL CUSTOMER GROUPS")) {
 			txCustomerGroup = "";
 		} else {
@@ -154,7 +162,7 @@ public class TubularHeatExchangerBean implements Serializable {
 		} else {
 			txCustomerNumber = "e.id = '" + customerNumber + "' AND ";
 		}
-		clientSelectionConstraints = txCluster + txMarketGroup + txCustomerGroup + txCustomerNumber;
+		clientSelectionConstraints = txCluster + txMarketGroup + txMarket + txCustomerGroup + txCustomerNumber;
 		// System.out.format("****************** THIS IS THE
 		// clientSelectionConstraints *******************\n%s\n ",
 		// clientSelectionConstraints);
@@ -170,7 +178,7 @@ public class TubularHeatExchangerBean implements Serializable {
 	 */
 	private String makeFamilyMapQueryStatement(String partFamilyName) {
 		String tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)<-[r: ROUTE]-(:Part)-[:MEMBER_OF]->(pf: PartFamily) "
-				+ "MATCH (e)-[:LINKED]->(:Market)-[:IN]->(mg: MarketGrp)-[:IN]->(c: Cluster)-[:IN]->(:GlobalMarket) "
+				+ "MATCH (e)-[:LINKED]->(m: Market)-[:IN]->(mg: MarketGrp)-[:IN]->(c: Cluster)-[:IN]->(:GlobalMarket) "
 				+ "WHERE " + clientSelectionConstraints + " pf.name = '" + partFamilyName + "' "
 				+ "RETURN SUM(r.qty) AS TotalQty";
 
@@ -197,7 +205,7 @@ public class TubularHeatExchangerBean implements Serializable {
 
 		String tx = "MATCH (f1: " + functionLabelNameTube + ")-[:IN]->(eq: Equipment)<-[:IN]-(f2: "
 				+ functionLabelNameOring + ")" + " MATCH (eq: Equipment)-[:IB_ROUTE]->(e :Entity)-[:IN]->(cg: CustGrp)"
-				+ " MATCH (e)-[:LINKED]->(:Market)-[:IN]->(mg: MarketGrp)-[:IN]->(c: Cluster)-[:IN]->(:GlobalMarket) "
+				+ " MATCH (e)-[:LINKED]->(m: Market)-[:IN]->(mg: MarketGrp)-[:IN]->(c: Cluster)-[:IN]->(:GlobalMarket) "
 				+ "WHERE " + clientSelectionConstraints + " eq.constructionYear <= " + CONSUMPTION_HURDLE_YEAR + " "
 				+ "WITH f1.id AS eqID1, f2.id AS eqID2, eq.runningHoursPA AS runHours, f1." + tubeTypeQty
 				+ " AS tubeQty, f2.serviceInterval AS serviceInterval "
@@ -1056,7 +1064,7 @@ public class TubularHeatExchangerBean implements Serializable {
 
 				String tx = "MATCH (f10: Ctube)-[:IN]->(eq10: Equipment)<-[:IN]-(f20: Seal) "
 						+ "MATCH (eq10: Equipment)-[:IB_ROUTE]->(e :Entity)-[:IN]->(cg: CustGrp) "
-						+ "MATCH (e)-[:LINKED]->(:Market)-[:IN]->(mg: MarketGrp)-[:IN]->(c: Cluster)-[:IN]->(:GlobalMarket) "
+						+ "MATCH (e)-[:LINKED]->(m: Market)-[:IN]->(mg: MarketGrp)-[:IN]->(c: Cluster)-[:IN]->(:GlobalMarket) "
 						+ "WHERE " + clientSelectionConstraints + " eq10.constructionYear <= " + CONSUMPTION_HURDLE_YEAR
 						+ " "
 						+ "WITH f10.id AS eqID10, f20.id AS eqID20, eq10.runningHoursPA AS runHours, (f10.nonRegTubeQty + f10.regTubeQty  + f10.holdingTubeQty) AS tubeQty, f20.serviceInterval AS serviceInterval "
@@ -1068,7 +1076,7 @@ public class TubularHeatExchangerBean implements Serializable {
 
 						+ "MATCH (f15: MTtube)-[:IN]->(eq15: Equipment)<-[:IN]-(f25: Seal) "
 						+ "MATCH (eq15: Equipment)-[:IB_ROUTE]->(e :Entity)-[:IN]->(cg: CustGrp) "
-						+ "MATCH (e)-[:LINKED]->(:Market)-[:IN]->(mg: MarketGrp)-[:IN]->(c: Cluster)-[:IN]->(:GlobalMarket) "
+						+ "MATCH (e)-[:LINKED]->(m: Market)-[:IN]->(mg: MarketGrp)-[:IN]->(c: Cluster)-[:IN]->(:GlobalMarket) "
 						+ "WHERE " + clientSelectionConstraints + " eq15.constructionYear <= " + CONSUMPTION_HURDLE_YEAR
 						+ " "
 						+ "WITH f15.id AS eqID15, f25.id AS eqID25, eq15.runningHoursPA AS runHours, (f15.nonRegTubeQty + f15.regTubeQty  + f15.holdingTubeQty) AS tubeQty, f25.serviceInterval AS serviceInterval "

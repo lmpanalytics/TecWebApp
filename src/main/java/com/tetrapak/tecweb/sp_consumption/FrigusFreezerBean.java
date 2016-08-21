@@ -45,6 +45,7 @@ public class FrigusFreezerBean implements Serializable {
 	private final int CONSUMPTION_HURDLE_YEAR = LocalDate.now().minusYears(3).getYear();
 	private String cluster;
 	private String marketGroup;
+	private String market;
 	private String customerGroup;
 	private String customerNumber;
 
@@ -97,6 +98,7 @@ public class FrigusFreezerBean implements Serializable {
 
 		cluster = customerSetBean.getSelectedCluster();
 		marketGroup = customerSetBean.getSelectedMarketGroup();
+		market = customerSetBean.getSelectedMarket();
 		customerGroup = customerSetBean.getSelectedCustGroup();
 		customerNumber = customerSetBean.getSelectedCustNumber();
 
@@ -171,6 +173,7 @@ public class FrigusFreezerBean implements Serializable {
 	private void makeClientSelectionConstraints() {
 		String txCluster;
 		String txMarketGroup;
+		String txMarket;
 		String txCustomerGroup;
 		String txCustomerNumber;
 
@@ -184,6 +187,11 @@ public class FrigusFreezerBean implements Serializable {
 		} else {
 			txMarketGroup = "mg.name = '" + marketGroup + "' AND ";
 		}
+		if (market.equals("ALL MARKETS")) {
+			txMarket = "";
+		} else {
+			txMarket = "m.name = '" + market + "' AND ";
+		}
 		if (customerGroup.equals("ALL CUSTOMER GROUPS")) {
 			txCustomerGroup = "";
 		} else {
@@ -194,7 +202,7 @@ public class FrigusFreezerBean implements Serializable {
 		} else {
 			txCustomerNumber = "e.id = '" + customerNumber + "' AND ";
 		}
-		clientSelectionConstraints = txCluster + txMarketGroup + txCustomerGroup + txCustomerNumber;
+		clientSelectionConstraints = txCluster + txMarketGroup + txMarket + txCustomerGroup + txCustomerNumber;
 		// System.out.format("****************** THIS IS THE
 		// clientSelectionConstraints *******************\n%s\n ",
 		// clientSelectionConstraints);
@@ -210,7 +218,7 @@ public class FrigusFreezerBean implements Serializable {
 	 */
 	private String makeFamilyMapQueryStatement(String partFamilyName) {
 		String tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)<-[r: ROUTE]-(:Part)-[:MEMBER_OF]->(pf: PartFamily) "
-				+ "MATCH (e)-[:LINKED]->(:Market)-[:IN]->(mg: MarketGrp)-[:IN]->(c: Cluster)-[:IN]->(:GlobalMarket) "
+				+ "MATCH (e)-[:LINKED]->(m: Market)-[:IN]->(mg: MarketGrp)-[:IN]->(c: Cluster)-[:IN]->(:GlobalMarket) "
 				+ "WHERE " + clientSelectionConstraints + " pf.name = '" + partFamilyName + "' "
 				+ "RETURN SUM(r.qty) AS TotalQty";
 		return tx;
@@ -227,7 +235,7 @@ public class FrigusFreezerBean implements Serializable {
 	private String makePotentialsQueryStatement(String functionLabelName) {
 		String tx = "MATCH (f1: " + functionLabelName
 				+ ")-[r: IN]->(eq: Equipment)-[:IB_ROUTE]->(e :Entity)-[:IN]->(cg: CustGrp) "
-				+ "MATCH q = (e)-[:LINKED]->(:Market)-[:IN]->(mg: MarketGrp)-[:IN]->(c: Cluster)-[:IN]->(:GlobalMarket) "
+				+ "MATCH q = (e)-[:LINKED]->(m: Market)-[:IN]->(mg: MarketGrp)-[:IN]->(c: Cluster)-[:IN]->(:GlobalMarket) "
 				+ "WHERE " + clientSelectionConstraints + " eq.constructionYear <= " + CONSUMPTION_HURDLE_YEAR + " "
 				+ "WITH f1.id AS eqID1, eq.runningHoursPA AS runHours, f1.serviceInterval AS serviceInterval, r.qty AS partQty "
 				// Calculate Potential

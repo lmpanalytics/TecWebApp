@@ -54,12 +54,14 @@ public class CustomerSetBean implements Serializable {
 
 	private Set<String> clusterSet;
 	private Set<String> marketGroupSet;
+	private Set<String> marketSet;
 	private Set<String> custGroupSet;
 	// private Set<String> custNumberSet;
 	private Map<String, String> custNumberMap;
 
 	private String selectedCluster;
 	private String selectedMarketGroup;
+	private String selectedMarket;
 	private String selectedCustGroup;
 	private String selectedCustNumber;
 	private String selectedCustName;
@@ -85,12 +87,14 @@ public class CustomerSetBean implements Serializable {
 	public void init() {
 		clusterSet = new LinkedHashSet<>();
 		marketGroupSet = new LinkedHashSet<>();
+		marketSet = new LinkedHashSet<>();
 		custGroupSet = new LinkedHashSet<>();
 		// custNumberSet = new LinkedHashSet<>();
 		custNumberMap = new LinkedHashMap<>();
 
 		// clusterSet.add("ALL CLUSTERS");
 		marketGroupSet.add("ALL MARKET GROUPS");
+		marketSet.add("ALL MARKETS");
 		custGroupSet.add("ALL CUSTOMER GROUPS");
 		// custNumberSet.add("ALL CUSTOMER NUMBERS");
 		custNumberMap.put("ALL CUSTOMER NUMBERS", "ALL CUSTOMER NUMBERS");
@@ -112,6 +116,7 @@ public class CustomerSetBean implements Serializable {
 		// Initiate selection filtering
 		queryClusterSet();
 		queryMarketGroupSet();
+		queryMarketSet();
 		queryCustGroupSet();
 		// queryCustNumberSet();
 		queryCustNumberMap();
@@ -128,6 +133,9 @@ public class CustomerSetBean implements Serializable {
 
 		marketGroupSet.clear();
 		marketGroupSet.add("ALL MARKET GROUPS");
+
+		marketSet.clear();
+		marketSet.add("ALL MARKETS");
 
 		custGroupSet.clear();
 		custGroupSet.add("ALL CUSTOMER GROUPS");
@@ -189,8 +197,12 @@ public class CustomerSetBean implements Serializable {
 	 * @return the marketGroupSet
 	 */
 	public Set<String> queryMarketGroupSet() {
+		printSelectedCluster();
 		marketGroupSet.clear();
 		marketGroupSet.add("ALL MARKET GROUPS");
+
+		marketSet.clear();
+		marketSet.add("ALL MARKETS");
 
 		custGroupSet.clear();
 		custGroupSet.add("ALL CUSTOMER GROUPS");
@@ -237,12 +249,79 @@ public class CustomerSetBean implements Serializable {
 	}
 
 	/**
+	 * Make collection of all Markets
+	 * 
+	 * @return the marketSet
+	 */
+	public Set<String> queryMarketSet() {
+		printSelectedMarketGroup();
+		marketSet.clear();
+		marketSet.add("ALL MARKETS");
+
+		custGroupSet.clear();
+		custGroupSet.add("ALL CUSTOMER GROUPS");
+
+		// custNumberSet.clear();
+		// custNumberSet.add("ALL CUSTOMER NUMBERS");
+		custNumberMap.clear();
+		custNumberMap.put("ALL CUSTOMER NUMBERS", "ALL CUSTOMER NUMBERS");
+
+		// code query here
+		// modeled according to
+		// https://www.mathsisfun.com/combinatorics/combinations-permutations-calculator.html
+		try (Session session = NeoDbProvider.getDriver().session()) {
+
+			// Run single statements one-by-one, OR...
+			String tx;
+			if (getSelectedMarketGroup() == null || (getSelectedCluster().equals("ALL CLUSTERS")
+					&& getSelectedMarketGroup().equals("ALL MARKET GROUPS"))) {
+				tx = "MATCH (m: Market) RETURN distinct m.name AS name ORDER BY name";
+			} else if (!getSelectedCluster().equals("ALL CLUSTERS")
+					&& getSelectedMarketGroup().equals("ALL MARKET GROUPS")) {
+				tx = "MATCH (m: Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE " + "cl.id = '"
+						+ getSelectedCluster() + "'" + " RETURN distinct m.name AS name ORDER BY name";
+			} else if (getSelectedCluster().equals("ALL CLUSTERS")
+					&& !getSelectedMarketGroup().equals("ALL MARKET GROUPS")) {
+				tx = "MATCH (m: Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE " + " mg.name = '"
+						+ getSelectedMarketGroup() + "'" + " RETURN distinct m.name AS name ORDER BY name";
+			} else {
+				tx = "MATCH (m: Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE " + "cl.id = '"
+						+ getSelectedCluster() + "' AND mg.name = '" + getSelectedMarketGroup() + "'"
+						+ " RETURN distinct m.name AS name ORDER BY name";
+			}
+
+			System.out.format("queryMarketSet, tx query text: %s", tx);
+			StatementResult result = session.run(tx);
+
+			while (result.hasNext()) {
+				Record r = result.next();
+				String key = r.get("name").asString();
+				marketSet.add(key);
+			}
+
+			System.out.printf("%s > Queried Market name set\n", LocalDateTime.now());
+			System.out.printf("Size of marketSet is %s.\n", marketSet.size());
+		} catch (ClientException e) {
+			System.err.println("Exception in 'queryMarketSet()':" + e);
+			System.out.printf("Size of marketSet is %s.\n", marketSet.size());
+		} finally {
+			neoDbProvider.closeNeo4jDriver();
+			// System.out.printf("size of marketSet is %s::\n",
+			// marketSet.size());
+
+		}
+
+		return marketSet;
+
+	}
+
+	/**
 	 * Make collection of all customer groups
 	 * 
 	 * @return the custGroupSet
 	 */
 	public Set<String> queryCustGroupSet() {
-		printSelectedMarketGroup();
+		printSelectedMarket();
 
 		custGroupSet.clear();
 		custGroupSet.add("ALL CUSTOMER GROUPS");
@@ -257,15 +336,50 @@ public class CustomerSetBean implements Serializable {
 			// Run single statements one-by-one, OR...
 			String tx;
 			if (getSelectedMarketGroup() == null || (getSelectedCluster().equals("ALL CLUSTERS")
-					&& getSelectedMarketGroup().equals("ALL MARKET GROUPS"))) {
+					&& getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+					&& getSelectedMarket().equals("ALL MARKETS"))) {
 				tx = "MATCH (cg: CustGrp) RETURN distinct cg.name AS name ORDER BY name";
-			} else if (getSelectedMarketGroup().equals("ALL MARKET GROUPS")) {
-				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(:Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE cl.id = '"
-						+ getSelectedCluster() + "' RETURN distinct cg.name AS name ORDER BY name";
+			} else if (!getSelectedCluster().equals("ALL CLUSTERS")
+					&& !getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+					&& getSelectedMarket().equals("ALL MARKETS")) {
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " cl.id = '" + getSelectedCluster() + "' AND mg.name = '" + getSelectedMarketGroup() + "'"
+						+ " RETURN distinct cg.name AS name ORDER BY name";
+			} else if (!getSelectedCluster().equals("ALL CLUSTERS")
+					&& getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+					&& !getSelectedMarket().equals("ALL MARKETS")) {
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " cl.id = '" + getSelectedCluster() + "' AND m.name = '" + getSelectedMarket() + "'"
+						+ " RETURN distinct cg.name AS name ORDER BY name";
+			} else if (!getSelectedCluster().equals("ALL CLUSTERS")
+					&& getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+					&& getSelectedMarket().equals("ALL MARKETS")) {
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " cl.id = '" + getSelectedCluster() + "'" + " RETURN distinct cg.name AS name ORDER BY name";
+			} else if (getSelectedCluster().equals("ALL CLUSTERS")
+					&& !getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+					&& !getSelectedMarket().equals("ALL MARKETS")) {
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " mg.name = '" + getSelectedMarketGroup() + "' AND m.name = '" + getSelectedMarket() + "'"
+						+ " RETURN distinct cg.name AS name ORDER BY name";
+			} else if (getSelectedCluster().equals("ALL CLUSTERS")
+					&& !getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+					&& getSelectedMarket().equals("ALL MARKETS")) {
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " mg.name = '" + getSelectedMarketGroup() + "'"
+						+ " RETURN distinct cg.name AS name ORDER BY name";
+			} else if (getSelectedCluster().equals("ALL CLUSTERS")
+					&& getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+					&& !getSelectedMarket().equals("ALL MARKETS")) {
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " m.name = '" + getSelectedMarket() + "'" + " RETURN distinct cg.name AS name ORDER BY name";
 			} else {
-				tx = "MATCH (cg: CustGrp)-[*1..3]-(mg: MarketGrp) WHERE mg.name = '" + getSelectedMarketGroup()
-						+ "' RETURN distinct cg.name AS name ORDER BY name";
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " cl.id = '" + getSelectedCluster() + "' AND mg.name = '" + getSelectedMarketGroup()
+						+ "' AND m.name = '" + getSelectedMarket() + "'"
+						+ " RETURN distinct cg.name AS name ORDER BY name";
 			}
+
 			System.out.format("queryCustGroupSet, tx query text: %s", tx);
 			StatementResult result = session.run(tx);
 
@@ -362,32 +476,116 @@ public class CustomerSetBean implements Serializable {
 			// Run single statements one-by-one, OR...
 			String tx;
 			if (getSelectedCustGroup() == null || (getSelectedCluster().equals("ALL CLUSTERS")
-					&& getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+					&& getSelectedMarketGroup().equals("ALL MARKET GROUPS") && getSelectedMarket().equals("ALL MARKETS")
 					&& getSelectedCustGroup().equals("ALL CUSTOMER GROUPS"))) {
 				tx = "MATCH (e:Entity) RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID LIMIT 0";
-			} else if (getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+			} else if (!getSelectedCluster().equals("ALL CLUSTERS")
+					&& !getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+					&& !getSelectedMarket().equals("ALL MARKETS")
 					&& getSelectedCustGroup().equals("ALL CUSTOMER GROUPS")) {
-				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(:Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE cl.id = '"
-						+ getSelectedCluster()
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " cl.id = '" + getSelectedCluster() + "' AND mg.name = '" + getSelectedMarketGroup()
+						+ "' AND m.name = '" + getSelectedMarket()
+						+ "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID";
+
+			} else if (!getSelectedCluster().equals("ALL CLUSTERS")
+					&& !getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+					&& getSelectedMarket().equals("ALL MARKETS")
+					&& !getSelectedCustGroup().equals("ALL CUSTOMER GROUPS")) {
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " cl.id = '" + getSelectedCluster() + "' AND mg.name = '" + getSelectedMarketGroup()
+						+ "' AND cg.name = '" + getSelectedCustGroup()
+						+ "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID";
+			} else if (!getSelectedCluster().equals("ALL CLUSTERS")
+					&& !getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+					&& getSelectedMarket().equals("ALL MARKETS")
+					&& getSelectedCustGroup().equals("ALL CUSTOMER GROUPS")) {
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " cl.id = '" + getSelectedCluster() + "' AND mg.name = '" + getSelectedMarketGroup()
+						+ "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID";
+			} else if (!getSelectedCluster().equals("ALL CLUSTERS")
+					&& getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+					&& !getSelectedMarket().equals("ALL MARKETS")
+					&& !getSelectedCustGroup().equals("ALL CUSTOMER GROUPS")) {
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " cl.id = '" + getSelectedCluster() + "' AND m.name = '" + getSelectedMarket()
+						+ "' AND cg.name = '" + getSelectedCustGroup()
+						+ "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID";
+			} else if (!getSelectedCluster().equals("ALL CLUSTERS")
+					&& getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+					&& !getSelectedMarket().equals("ALL MARKETS")
+					&& getSelectedCustGroup().equals("ALL CUSTOMER GROUPS")) {
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " cl.id = '" + getSelectedCluster() + "' AND m.name = '" + getSelectedMarket()
+						+ "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID";
+			} else if (!getSelectedCluster().equals("ALL CLUSTERS")
+					&& getSelectedMarketGroup().equals("ALL MARKET GROUPS") && getSelectedMarket().equals("ALL MARKETS")
+					&& !getSelectedCustGroup().equals("ALL CUSTOMER GROUPS")) {
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " cl.id = '" + getSelectedCluster() + "' AND cg.name = '" + getSelectedCustGroup()
+						+ "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID";
+			} else if (!getSelectedCluster().equals("ALL CLUSTERS")
+					&& getSelectedMarketGroup().equals("ALL MARKET GROUPS") && getSelectedMarket().equals("ALL MARKETS")
+					&& getSelectedCustGroup().equals("ALL CUSTOMER GROUPS")) {
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " cl.id = '" + getSelectedCluster()
 						+ "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID";
 			} else if (getSelectedCluster().equals("ALL CLUSTERS")
-					&& getSelectedMarketGroup().equals("ALL MARKET GROUPS")) {
-				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(:Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE cg.name = '"
-						+ getSelectedCustGroup()
+					&& !getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+					&& !getSelectedMarket().equals("ALL MARKETS")
+					&& !getSelectedCustGroup().equals("ALL CUSTOMER GROUPS")) {
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " mg.name = '" + getSelectedMarketGroup() + "' AND m.name = '" + getSelectedMarket()
+						+ "' AND cg.name = '" + getSelectedCustGroup()
 						+ "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID";
-			} else if (getSelectedMarketGroup().equals("ALL MARKET GROUPS")) {
-				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(:Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE cl.id = '"
-						+ getSelectedCluster() + "' AND cg.name = '" + getSelectedCustGroup()
+			} else if (getSelectedCluster().equals("ALL CLUSTERS")
+					&& !getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+					&& !getSelectedMarket().equals("ALL MARKETS")
+					&& getSelectedCustGroup().equals("ALL CUSTOMER GROUPS")) {
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " mg.name = '" + getSelectedMarketGroup() + "' AND m.name = '" + getSelectedMarket()
 						+ "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID";
-			} else if (getSelectedCustGroup().equals("ALL CUSTOMER GROUPS")) {
-				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(:Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE mg.name = '"
-						+ getSelectedMarketGroup()
+			} else if (getSelectedCluster().equals("ALL CLUSTERS")
+					&& !getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+					&& getSelectedMarket().equals("ALL MARKETS")
+					&& !getSelectedCustGroup().equals("ALL CUSTOMER GROUPS")) {
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " mg.name = '" + getSelectedMarketGroup() + "' AND cg.name = '" + getSelectedCustGroup()
+						+ "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID";
+			} else if (getSelectedCluster().equals("ALL CLUSTERS")
+					&& !getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+					&& getSelectedMarket().equals("ALL MARKETS")
+					&& getSelectedCustGroup().equals("ALL CUSTOMER GROUPS")) {
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " mg.name = '" + getSelectedMarketGroup()
+						+ "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID";
+			} else if (getSelectedCluster().equals("ALL CLUSTERS")
+					&& getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+					&& !getSelectedMarket().equals("ALL MARKETS")
+					&& !getSelectedCustGroup().equals("ALL CUSTOMER GROUPS")) {
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " m.name = '" + getSelectedMarket() + "' AND cg.name = '" + getSelectedCustGroup()
+						+ "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID";
+			} else if (getSelectedCluster().equals("ALL CLUSTERS")
+					&& getSelectedMarketGroup().equals("ALL MARKET GROUPS")
+					&& !getSelectedMarket().equals("ALL MARKETS")
+					&& getSelectedCustGroup().equals("ALL CUSTOMER GROUPS")) {
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " m.name = '" + getSelectedMarket()
+						+ "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID";
+			} else if (getSelectedCluster().equals("ALL CLUSTERS")
+					&& getSelectedMarketGroup().equals("ALL MARKET GROUPS") && getSelectedMarket().equals("ALL MARKETS")
+					&& !getSelectedCustGroup().equals("ALL CUSTOMER GROUPS")) {
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " cg.name = '" + getSelectedCustGroup()
 						+ "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID";
 			} else {
-				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(:Market)-[:IN]->(mg: MarketGrp) WHERE cg.name = '"
-						+ getSelectedCustGroup() + "' AND mg.name = '" + getSelectedMarketGroup()
+				tx = "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(m :Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE"
+						+ " cl.id = '" + getSelectedCluster() + "' AND mg.name = '" + getSelectedMarketGroup()
+						+ "' AND m.name = '" + getSelectedMarket() + "' AND cg.name = '" + getSelectedCustGroup()
 						+ "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID";
 			}
+
 			System.out.format("queryCustNumberSet, tx query text is: %s", tx);
 			StatementResult result = session.run(tx);
 
@@ -442,6 +640,21 @@ public class CustomerSetBean implements Serializable {
 	 */
 	public void setMarketGroupSet(Set<String> marketGroupSet) {
 		this.marketGroupSet = marketGroupSet;
+	}
+
+	/**
+	 * @return the marketSet
+	 */
+	public Set<String> getMarketSet() {
+		return marketSet;
+	}
+
+	/**
+	 * @param marketSet
+	 *            the marketSet to set
+	 */
+	public void setMarketSet(Set<String> marketSet) {
+		this.marketSet = marketSet;
 	}
 
 	/**
@@ -521,6 +734,21 @@ public class CustomerSetBean implements Serializable {
 	}
 
 	/**
+	 * @return the selectedMarket
+	 */
+	public String getSelectedMarket() {
+		return selectedMarket;
+	}
+
+	/**
+	 * @param selectedMarket
+	 *            the selectedMarket to set
+	 */
+	public void setSelectedMarket(String selectedMarket) {
+		this.selectedMarket = selectedMarket;
+	}
+
+	/**
 	 * @return the selectedCustGroup
 	 */
 	public String getSelectedCustGroup() {
@@ -565,8 +793,16 @@ public class CustomerSetBean implements Serializable {
 		this.selectedCustName = selectedCustName;
 	}
 
+	private void printSelectedCluster() {
+		System.out.format("This is the selectedCluster: %s\n", selectedCluster);
+	}
+
 	private void printSelectedMarketGroup() {
 		System.out.format("This is the selectedMarketGroup: %s\n", selectedMarketGroup);
+	}
+
+	private void printSelectedMarket() {
+		System.out.format("This is the selectedMarket: %s\n", selectedMarket);
 	}
 
 	private void printSelectedCustGroup() {
