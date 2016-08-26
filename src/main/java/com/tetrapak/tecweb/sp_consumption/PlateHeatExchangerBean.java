@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -265,19 +266,6 @@ public class PlateHeatExchangerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = cTypeFamilyMap.get("C-Gasket").get(1);
-			if (consumption == 0d) {
-				valueList.add(new BigDecimal(String.valueOf(getcGasketPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				cTypeFamilyMap.replace("C-Gasket", valueList);
-			}
-
 			// *****************************************************************************************************
 
 			// Aggregate C-Plate consumption grouped per customer group
@@ -314,20 +302,167 @@ public class PlateHeatExchangerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption1 = cTypeFamilyMap.get("C-Plate").get(1);
-			if (consumption1 == 0d) {
-				valueList1.add(new BigDecimal(String.valueOf(getcPlatePotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList1.add(0d);
-				valueList1.add(0d);
-				cTypeFamilyMap.replace("C-Plate", valueList1);
+			// *************************PROCESS_PLATE_WITH_GASKET*************************
+
+			// Aggregate C-Gasket consumption grouped per customer group
+			List<Double> valueListPWG = new ArrayList<>();
+			List<Double> valueListCombined = new ArrayList<>();
+
+			String txPWG = makeFamilyMapQueryStatement("PHE_C-PLATE_WITH_GASKET");
+
+			StatementResult resultPWG = session.run(txPWG);
+
+			while (resultPWG.hasNext()) {
+				Record r = resultPWG.next();
+
+				// Add the calculated potential to the value list
+				double tempPotential = getcGasketPotential();
+				valueListPWG.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+						.doubleValue());
+				/*
+				 * Add total consumption divided by 3 (to get annual consumption
+				 * from 36 months sales history) to the value list
+				 */
+				double total = r.get("TotalQty").asDouble() / 3d;
+
+				valueListPWG
+						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				double ratio = 0d;
+				// Calculate the consumption ratio (consumed/potential), and
+				// handle division by zero exception
+				if (valueListPWG.get(0) != 0d) {
+					ratio = total / tempPotential;
+				}
+				valueListPWG
+						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+
+				// ******* CODE BLOCK to merge potentials and sales *******
+				double calcPot = 0d;
+				double calcSales = 0d;
+				double calcRatio = 0d;
+				for (int i = 0; i < valueList.size(); i++) {
+					double d = valueList.get(i);
+					double dPWG = valueListPWG.get(i);
+					// System.out.printf("cGasket %s, cGasket
+					// FromPlateWGasket
+					// %s", d, dPWG);
+					// Calculate the potential
+					if (i == 0) {
+						// if potentials are zero or the same, then use the
+						// 'd'
+						// potential
+						if (d == dPWG) {
+							calcPot = d;
+						} else {
+							calcPot = d + dPWG;
+						}
+						// Calculate actual sales by adding them together
+					} else if (i == 1) {
+						calcSales = d + dPWG;
+					}
+				}
+
+				// Calculate the consumption ratio (consumed/potential), and
+				// handle division by zero exception
+				if (calcPot != 0d) {
+					calcRatio = calcSales / calcPot;
+				}
+
+				// Add to combined list
+				valueListCombined.add(
+						new BigDecimal(String.valueOf(calcPot)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				valueListCombined.add(
+						new BigDecimal(String.valueOf(calcSales)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				valueListCombined.add(
+						new BigDecimal(String.valueOf(calcRatio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				cTypeFamilyMap.replace("C-Gasket", valueListCombined);
+
+				// System.out.printf("Potential is %s, sales is %s, ratio is
+				// %s", calcPot, calcSales, calcRatio);
+				// ******* CODE BLOCK END *******
 			}
 
 			// *****************************************************************************************************
+
+			// Aggregate C-Plate consumption grouped per customer group
+			List<Double> valueListPWG1 = new ArrayList<>();
+			List<Double> valueListCombined1 = new ArrayList<>();
+
+			String txPWG1 = makeFamilyMapQueryStatement("PHE_C-PLATE_WITH_GASKET");
+
+			StatementResult resultPWG1 = session.run(txPWG1);
+
+			while (resultPWG1.hasNext()) {
+				Record r = resultPWG1.next();
+
+				// Add the calculated potential to the value list
+				double tempPotential = getcPlatePotential();
+				valueListPWG1.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+						.doubleValue());
+				/*
+				 * Add total consumption divided by 3 (to get annual consumption
+				 * from 36 months sales history) to the value list
+				 */
+				double total = r.get("TotalQty").asDouble() / 3d;
+
+				valueListPWG1
+						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				double ratio = 0d;
+				// Calculate the consumption ratio (consumed/potential), and
+				// handle division by zero exception
+				if (valueListPWG1.get(0) != 0d) {
+					ratio = total / tempPotential;
+				}
+				valueListPWG1
+						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+
+				// ******* CODE BLOCK to merge potentials and sales *******
+				double calcPot = 0d;
+				double calcSales = 0d;
+				double calcRatio = 0d;
+				for (int i = 0; i < valueList1.size(); i++) {
+					double d = valueList1.get(i);
+					double dPWG = valueListPWG1.get(i);
+					// System.out.printf("cPlate %s, cPlate FromPlateWGasket
+					// %s", d, dPWG);
+					// Calculate the potential
+					if (i == 0) {
+						// if potentials are zero or the same, then use the
+						// 'd'
+						// potential
+						if (d == dPWG) {
+							calcPot = d;
+						} else {
+							calcPot = d + dPWG;
+						}
+						// Calculate actual sales by adding them together
+					} else if (i == 1) {
+						calcSales = d + dPWG;
+					}
+				}
+
+				// Calculate the consumption ratio (consumed/potential), and
+				// handle division by zero exception
+				if (calcPot != 0d) {
+					calcRatio = calcSales / calcPot;
+				}
+
+				// Add to combined list
+				valueListCombined1.add(
+						new BigDecimal(String.valueOf(calcPot)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				valueListCombined1.add(
+						new BigDecimal(String.valueOf(calcSales)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				valueListCombined1.add(
+						new BigDecimal(String.valueOf(calcRatio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				cTypeFamilyMap.replace("C-Plate", valueListCombined1);
+
+				// System.out.printf("Potential is %s, sales is %s, ratio is
+				// %s", calcPot, calcSales, calcRatio);
+				// ******* CODE BLOCK END *******
+
+			}
+
+			// *******************************************END_PWG*****************************************
 
 		} catch (ClientException e) {
 			System.err.println("Exception in 'getcTypeFamilyMap()':" + e);
@@ -381,19 +516,6 @@ public class PlateHeatExchangerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = mTypeFamilyMap.get("M-Gasket").get(1);
-			if (consumption == 0d) {
-				valueList.add(new BigDecimal(String.valueOf(getmGasketPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				mTypeFamilyMap.replace("M-Gasket", valueList);
-			}
-
 			// *****************************************************************************************************
 
 			// Aggregate M-Plate consumption grouped per customer group
@@ -430,20 +552,167 @@ public class PlateHeatExchangerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption1 = mTypeFamilyMap.get("M-Plate").get(1);
-			if (consumption1 == 0d) {
-				valueList1.add(new BigDecimal(String.valueOf(getmPlatePotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList1.add(0d);
-				valueList1.add(0d);
-				mTypeFamilyMap.replace("M-Plate", valueList1);
+			// *************************PROCESS_PLATE_WITH_GASKET*************************
+
+			// Aggregate M-Gasket consumption grouped per customer group
+			List<Double> valueListPWG = new ArrayList<>();
+			List<Double> valueListCombined = new ArrayList<>();
+
+			String txPWG = makeFamilyMapQueryStatement("PHE_M-PLATE_WITH_GASKET");
+
+			StatementResult resultPWG = session.run(txPWG);
+
+			while (resultPWG.hasNext()) {
+				Record r = resultPWG.next();
+
+				// Add the calculated potential to the value list
+				double tempPotential = getmGasketPotential();
+				valueListPWG.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+						.doubleValue());
+				/*
+				 * Add total consumption divided by 3 (to get annual consumption
+				 * from 36 months sales history) to the value list
+				 */
+				double total = r.get("TotalQty").asDouble() / 3d;
+
+				valueListPWG
+						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				double ratio = 0d;
+				// Calculate the consumption ratio (consumed/potential), and
+				// handle division by zero exception
+				if (valueListPWG.get(0) != 0d) {
+					ratio = total / tempPotential;
+				}
+				valueListPWG
+						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+
+				// ******* CODE BLOCK to merge potentials and sales *******
+				double calcPot = 0d;
+				double calcSales = 0d;
+				double calcRatio = 0d;
+				for (int i = 0; i < valueList.size(); i++) {
+					double d = valueList.get(i);
+					double dPWG = valueListPWG.get(i);
+					// System.out.printf("mGasket %s, mGasket
+					// FromPlateWGasket
+					// %s", d, dPWG);
+					// Calculate the potential
+					if (i == 0) {
+						// if potentials are zero or the same, then use the
+						// 'd'
+						// potential
+						if (d == dPWG) {
+							calcPot = d;
+						} else {
+							calcPot = d + dPWG;
+						}
+						// Calculate actual sales by adding them together
+					} else if (i == 1) {
+						calcSales = d + dPWG;
+					}
+				}
+
+				// Calculate the consumption ratio (consumed/potential), and
+				// handle division by zero exception
+				if (calcPot != 0d) {
+					calcRatio = calcSales / calcPot;
+				}
+
+				// Add to combined list
+				valueListCombined.add(
+						new BigDecimal(String.valueOf(calcPot)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				valueListCombined.add(
+						new BigDecimal(String.valueOf(calcSales)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				valueListCombined.add(
+						new BigDecimal(String.valueOf(calcRatio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				mTypeFamilyMap.replace("M-Gasket", valueListCombined);
+
+				// System.out.printf("Potential is %s, sales is %s, ratio is
+				// %s", calcPot, calcSales, calcRatio);
+				// ******* CODE BLOCK END *******
 			}
 
 			// *****************************************************************************************************
+
+			// Aggregate M-Plate consumption grouped per customer group
+			List<Double> valueListPWG1 = new ArrayList<>();
+			List<Double> valueListCombined1 = new ArrayList<>();
+
+			String txPWG1 = makeFamilyMapQueryStatement("PHE_M-PLATE_WITH_GASKET");
+
+			StatementResult resultPWG1 = session.run(txPWG1);
+
+			while (resultPWG1.hasNext()) {
+				Record r = resultPWG1.next();
+
+				// Add the calculated potential to the value list
+				double tempPotential = getmPlatePotential();
+				valueListPWG1.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+						.doubleValue());
+				/*
+				 * Add total consumption divided by 3 (to get annual consumption
+				 * from 36 months sales history) to the value list
+				 */
+				double total = r.get("TotalQty").asDouble() / 3d;
+
+				valueListPWG1
+						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				double ratio = 0d;
+				// Calculate the consumption ratio (consumed/potential), and
+				// handle division by zero exception
+				if (valueListPWG1.get(0) != 0d) {
+					ratio = total / tempPotential;
+				}
+				valueListPWG1
+						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+
+				// ******* CODE BLOCK to merge potentials and sales *******
+				double calcPot = 0d;
+				double calcSales = 0d;
+				double calcRatio = 0d;
+				for (int i = 0; i < valueList1.size(); i++) {
+					double d = valueList1.get(i);
+					double dPWG = valueListPWG1.get(i);
+					// System.out.printf("mPlate %s, mPlate FromPlateWGasket
+					// %s", d, dPWG);
+					// Calculate the potential
+					if (i == 0) {
+						// if potentials are zero or the same, then use the
+						// 'd'
+						// potential
+						if (d == dPWG) {
+							calcPot = d;
+						} else {
+							calcPot = d + dPWG;
+						}
+						// Calculate actual sales by adding them together
+					} else if (i == 1) {
+						calcSales = d + dPWG;
+					}
+				}
+
+				// Calculate the consumption ratio (consumed/potential), and
+				// handle division by zero exception
+				if (calcPot != 0d) {
+					calcRatio = calcSales / calcPot;
+				}
+
+				// Add to combined list
+				valueListCombined1.add(
+						new BigDecimal(String.valueOf(calcPot)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				valueListCombined1.add(
+						new BigDecimal(String.valueOf(calcSales)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				valueListCombined1.add(
+						new BigDecimal(String.valueOf(calcRatio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				mTypeFamilyMap.replace("M-Plate", valueListCombined1);
+
+				// System.out.printf("Potential is %s, sales is %s, ratio is
+				// %s", calcPot, calcSales, calcRatio);
+				// ******* CODE BLOCK END *******
+
+			}
+
+			// *******************************************END_PWG*****************************************
 
 		} catch (ClientException e) {
 			System.err.println("Exception in 'getmTypeFamilyMap()':" + e);
@@ -497,26 +766,12 @@ public class PlateHeatExchangerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = hTypeFamilyMap.get("H-Gasket").get(1);
-			if (consumption == 0d) {
-				valueList.add(new BigDecimal(String.valueOf(gethGasketPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				hTypeFamilyMap.replace("H-Gasket", valueList);
-			}
-
 			// *****************************************************************************************************
 
 			// Aggregate H-Plate consumption grouped per customer group
 			List<Double> valueList1 = new ArrayList<>();
 
 			String tx1 = makeFamilyMapQueryStatement("PHE_H-PLATE");
-
 			StatementResult result1 = session.run(tx1);
 
 			while (result1.hasNext()) {
@@ -546,20 +801,167 @@ public class PlateHeatExchangerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption1 = hTypeFamilyMap.get("H-Plate").get(1);
-			if (consumption1 == 0d) {
-				valueList1.add(new BigDecimal(String.valueOf(gethPlatePotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList1.add(0d);
-				valueList1.add(0d);
-				hTypeFamilyMap.replace("H-Plate", valueList1);
+			// *************************PROCESS_PLATE_WITH_GASKET*************************
+
+			// Aggregate H-Gasket consumption grouped per customer group
+			List<Double> valueListPWG = new ArrayList<>();
+			List<Double> valueListCombined = new ArrayList<>();
+
+			String txPWG = makeFamilyMapQueryStatement("PHE_H-PLATE_WITH_GASKET");
+
+			StatementResult resultPWG = session.run(txPWG);
+
+			while (resultPWG.hasNext()) {
+				Record r = resultPWG.next();
+
+				// Add the calculated potential to the value list
+				double tempPotential = gethGasketPotential();
+				valueListPWG.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+						.doubleValue());
+				/*
+				 * Add total consumption divided by 3 (to get annual consumption
+				 * from 36 months sales history) to the value list
+				 */
+				double total = r.get("TotalQty").asDouble() / 3d;
+
+				valueListPWG
+						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				double ratio = 0d;
+				// Calculate the consumption ratio (consumed/potential), and
+				// handle division by zero exception
+				if (valueListPWG.get(0) != 0d) {
+					ratio = total / tempPotential;
+				}
+				valueListPWG
+						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+
+				// ******* CODE BLOCK to merge potentials and sales *******
+				double calcPot = 0d;
+				double calcSales = 0d;
+				double calcRatio = 0d;
+				for (int i = 0; i < valueList.size(); i++) {
+					double d = valueList.get(i);
+					double dPWG = valueListPWG.get(i);
+					// System.out.printf("hGasket %s, hGasket
+					// FromPlateWGasket
+					// %s", d, dPWG);
+					// Calculate the potential
+					if (i == 0) {
+						// if potentials are zero or the same, then use the
+						// 'd'
+						// potential
+						if (d == dPWG) {
+							calcPot = d;
+						} else {
+							calcPot = d + dPWG;
+						}
+						// Calculate actual sales by adding them together
+					} else if (i == 1) {
+						calcSales = d + dPWG;
+					}
+				}
+
+				// Calculate the consumption ratio (consumed/potential), and
+				// handle division by zero exception
+				if (calcPot != 0d) {
+					calcRatio = calcSales / calcPot;
+				}
+
+				// Add to combined list
+				valueListCombined.add(
+						new BigDecimal(String.valueOf(calcPot)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				valueListCombined.add(
+						new BigDecimal(String.valueOf(calcSales)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				valueListCombined.add(
+						new BigDecimal(String.valueOf(calcRatio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				hTypeFamilyMap.replace("H-Gasket", valueListCombined);
+
+				// System.out.printf("Potential is %s, sales is %s, ratio is
+				// %s", calcPot, calcSales, calcRatio);
+				// ******* CODE BLOCK END *******
 			}
 
 			// *****************************************************************************************************
+
+			// Aggregate H-Plate consumption grouped per customer group
+			List<Double> valueListPWG1 = new ArrayList<>();
+			List<Double> valueListCombined1 = new ArrayList<>();
+
+			String txPWG1 = makeFamilyMapQueryStatement("PHE_H-PLATE_WITH_GASKET");
+
+			StatementResult resultPWG1 = session.run(txPWG1);
+
+			while (resultPWG1.hasNext()) {
+				Record r = resultPWG1.next();
+
+				// Add the calculated potential to the value list
+				double tempPotential = gethPlatePotential();
+				valueListPWG1.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+						.doubleValue());
+				/*
+				 * Add total consumption divided by 3 (to get annual consumption
+				 * from 36 months sales history) to the value list
+				 */
+				double total = r.get("TotalQty").asDouble() / 3d;
+
+				valueListPWG1
+						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				double ratio = 0d;
+				// Calculate the consumption ratio (consumed/potential), and
+				// handle division by zero exception
+				if (valueListPWG1.get(0) != 0d) {
+					ratio = total / tempPotential;
+				}
+				valueListPWG1
+						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+
+				// ******* CODE BLOCK to merge potentials and sales *******
+				double calcPot = 0d;
+				double calcSales = 0d;
+				double calcRatio = 0d;
+				for (int i = 0; i < valueList1.size(); i++) {
+					double d = valueList1.get(i);
+					double dPWG = valueListPWG1.get(i);
+					// System.out.printf("hPlate %s, hPlate FromPlateWGasket
+					// %s", d, dPWG);
+					// Calculate the potential
+					if (i == 0) {
+						// if potentials are zero or the same, then use the
+						// 'd'
+						// potential
+						if (d == dPWG) {
+							calcPot = d;
+						} else {
+							calcPot = d + dPWG;
+						}
+						// Calculate actual sales by adding them together
+					} else if (i == 1) {
+						calcSales = d + dPWG;
+					}
+				}
+
+				// Calculate the consumption ratio (consumed/potential), and
+				// handle division by zero exception
+				if (calcPot != 0d) {
+					calcRatio = calcSales / calcPot;
+				}
+
+				// Add to combined list
+				valueListCombined1.add(
+						new BigDecimal(String.valueOf(calcPot)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				valueListCombined1.add(
+						new BigDecimal(String.valueOf(calcSales)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				valueListCombined1.add(
+						new BigDecimal(String.valueOf(calcRatio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				hTypeFamilyMap.replace("H-Plate", valueListCombined1);
+
+				// System.out.printf("Potential is %s, sales is %s, ratio is
+				// %s", calcPot, calcSales, calcRatio);
+				// ******* CODE BLOCK END *******
+
+			}
+
+			// *******************************************END_PWG*****************************************
 
 		} catch (ClientException e) {
 			System.err.println("Exception in 'gethTypeFamilyMap()':" + e);
@@ -613,19 +1015,6 @@ public class PlateHeatExchangerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = pTypeFamilyMap.get("P-Gasket").get(1);
-			if (consumption == 0d) {
-				valueList.add(new BigDecimal(String.valueOf(getpGasketPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				pTypeFamilyMap.replace("P-Gasket", valueList);
-			}
-
 			// *****************************************************************************************************
 
 			// Aggregate P-Plate consumption grouped per customer group
@@ -662,20 +1051,167 @@ public class PlateHeatExchangerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption1 = pTypeFamilyMap.get("P-Plate").get(1);
-			if (consumption1 == 0d) {
-				valueList1.add(new BigDecimal(String.valueOf(getpPlatePotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList1.add(0d);
-				valueList1.add(0d);
-				pTypeFamilyMap.replace("P-Plate", valueList1);
+			// *************************PROCESS_PLATE_WITH_GASKET*************************
+
+			// Aggregate P-Gasket consumption grouped per customer group
+			List<Double> valueListPWG = new ArrayList<>();
+			List<Double> valueListCombined = new ArrayList<>();
+
+			String txPWG = makeFamilyMapQueryStatement("PHE_P-PLATE_WITH_GASKET");
+
+			StatementResult resultPWG = session.run(txPWG);
+
+			while (resultPWG.hasNext()) {
+				Record r = resultPWG.next();
+
+				// Add the calculated potential to the value list
+				double tempPotential = getpGasketPotential();
+				valueListPWG.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+						.doubleValue());
+				/*
+				 * Add total consumption divided by 3 (to get annual consumption
+				 * from 36 months sales history) to the value list
+				 */
+				double total = r.get("TotalQty").asDouble() / 3d;
+
+				valueListPWG
+						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				double ratio = 0d;
+				// Calculate the consumption ratio (consumed/potential), and
+				// handle division by zero exception
+				if (valueListPWG.get(0) != 0d) {
+					ratio = total / tempPotential;
+				}
+				valueListPWG
+						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+
+				// ******* CODE BLOCK to merge potentials and sales *******
+				double calcPot = 0d;
+				double calcSales = 0d;
+				double calcRatio = 0d;
+				for (int i = 0; i < valueList.size(); i++) {
+					double d = valueList.get(i);
+					double dPWG = valueListPWG.get(i);
+					// System.out.printf("pGasket %s, pGasket
+					// FromPlateWGasket
+					// %s", d, dPWG);
+					// Calculate the potential
+					if (i == 0) {
+						// if potentials are zero or the same, then use the
+						// 'd'
+						// potential
+						if (d == dPWG) {
+							calcPot = d;
+						} else {
+							calcPot = d + dPWG;
+						}
+						// Calculate actual sales by adding them together
+					} else if (i == 1) {
+						calcSales = d + dPWG;
+					}
+				}
+
+				// Calculate the consumption ratio (consumed/potential), and
+				// handle division by zero exception
+				if (calcPot != 0d) {
+					calcRatio = calcSales / calcPot;
+				}
+
+				// Add to combined list
+				valueListCombined.add(
+						new BigDecimal(String.valueOf(calcPot)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				valueListCombined.add(
+						new BigDecimal(String.valueOf(calcSales)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				valueListCombined.add(
+						new BigDecimal(String.valueOf(calcRatio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				pTypeFamilyMap.replace("P-Gasket", valueListCombined);
+
+				// System.out.printf("Potential is %s, sales is %s, ratio is
+				// %s", calcPot, calcSales, calcRatio);
+				// ******* CODE BLOCK END *******
 			}
 
 			// *****************************************************************************************************
+
+			// Aggregate P-Plate consumption grouped per customer group
+			List<Double> valueListPWG1 = new ArrayList<>();
+			List<Double> valueListCombined1 = new ArrayList<>();
+
+			String txPWG1 = makeFamilyMapQueryStatement("PHE_P-PLATE_WITH_GASKET");
+
+			StatementResult resultPWG1 = session.run(txPWG1);
+
+			while (resultPWG1.hasNext()) {
+				Record r = resultPWG1.next();
+
+				// Add the calculated potential to the value list
+				double tempPotential = getpPlatePotential();
+				valueListPWG1.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+						.doubleValue());
+				/*
+				 * Add total consumption divided by 3 (to get annual consumption
+				 * from 36 months sales history) to the value list
+				 */
+				double total = r.get("TotalQty").asDouble() / 3d;
+
+				valueListPWG1
+						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				double ratio = 0d;
+				// Calculate the consumption ratio (consumed/potential), and
+				// handle division by zero exception
+				if (valueListPWG1.get(0) != 0d) {
+					ratio = total / tempPotential;
+				}
+				valueListPWG1
+						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+
+				// ******* CODE BLOCK to merge potentials and sales *******
+				double calcPot = 0d;
+				double calcSales = 0d;
+				double calcRatio = 0d;
+				for (int i = 0; i < valueList1.size(); i++) {
+					double d = valueList1.get(i);
+					double dPWG = valueListPWG1.get(i);
+					// System.out.printf("pPlate %s, pPlate FromPlateWGasket
+					// %s", d, dPWG);
+					// Calculate the potential
+					if (i == 0) {
+						// if potentials are zero or the same, then use the
+						// 'd'
+						// potential
+						if (d == dPWG) {
+							calcPot = d;
+						} else {
+							calcPot = d + dPWG;
+						}
+						// Calculate actual sales by adding them together
+					} else if (i == 1) {
+						calcSales = d + dPWG;
+					}
+				}
+
+				// Calculate the consumption ratio (consumed/potential), and
+				// handle division by zero exception
+				if (calcPot != 0d) {
+					calcRatio = calcSales / calcPot;
+				}
+
+				// Add to combined list
+				valueListCombined1.add(
+						new BigDecimal(String.valueOf(calcPot)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				valueListCombined1.add(
+						new BigDecimal(String.valueOf(calcSales)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				valueListCombined1.add(
+						new BigDecimal(String.valueOf(calcRatio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+				pTypeFamilyMap.replace("P-Plate", valueListCombined1);
+
+				// System.out.printf("Potential is %s, sales is %s, ratio is
+				// %s", calcPot, calcSales, calcRatio);
+				// ******* CODE BLOCK END *******
+
+			}
+
+			// *******************************************END_PWG*****************************************
 
 		} catch (ClientException e) {
 			System.err.println("Exception in 'getpTypeFamilyMap()':" + e);

@@ -260,19 +260,6 @@ public class HomogeniserBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = pistonFamilyMap.get("Piston").get(1);
-			if (consumption == 0d) {
-				valueList.add(new BigDecimal(String.valueOf(getPistonPotential())).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				pistonFamilyMap.replace("Piston", valueList);
-			}
-
 			// *****************************************************************************************************
 
 			// Aggregate Piston seal consumption grouped per customer group
@@ -309,19 +296,6 @@ public class HomogeniserBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption1 = pistonFamilyMap.get("Piston seal").get(1);
-			if (consumption1 == 0d) {
-				valueList1.add(new BigDecimal(String.valueOf(getPistonSealPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList1.add(0d);
-				valueList1.add(0d);
-				pistonFamilyMap.replace("Piston seal", valueList1);
-			}
-
 			// *****************************************************************************************************
 
 			// Aggregate Compression ring consumption grouped per customer group
@@ -356,19 +330,6 @@ public class HomogeniserBean implements Serializable {
 						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 				pistonFamilyMap.replace("Compression ring", valueList2);
 
-			}
-
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption2 = pistonFamilyMap.get("Compression ring").get(1);
-			if (consumption2 == 0d) {
-				valueList2.add(new BigDecimal(String.valueOf(getCompressionRingPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList2.add(0d);
-				valueList2.add(0d);
-				pistonFamilyMap.replace("Compression ring", valueList2);
 			}
 
 			// *****************************************************************************************************
@@ -426,19 +387,6 @@ public class HomogeniserBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = homoDeviceFamilyMap.get("Forcer").get(1);
-			if (consumption == 0d) {
-				valueList.add(new BigDecimal(String.valueOf(getForcerPotential())).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				homoDeviceFamilyMap.replace("Forcer", valueList);
-			}
-
 			// *****************************************************************************************************
 
 			// Aggregate Impact ring consumption grouped per customer group
@@ -475,19 +423,6 @@ public class HomogeniserBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption1 = homoDeviceFamilyMap.get("Impact ring").get(1);
-			if (consumption1 == 0d) {
-				valueList1.add(new BigDecimal(String.valueOf(getImpactRingPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList1.add(0d);
-				valueList1.add(0d);
-				homoDeviceFamilyMap.replace("Impact ring", valueList1);
-			}
-
 			// *****************************************************************************************************
 
 			// Aggregate Seat consumption grouped per customer group
@@ -522,19 +457,6 @@ public class HomogeniserBean implements Serializable {
 						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 				homoDeviceFamilyMap.replace("Seat", valueList2);
 
-			}
-
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption2 = homoDeviceFamilyMap.get("Seat").get(1);
-			if (consumption2 == 0d) {
-				valueList2.add(new BigDecimal(String.valueOf(getForcerSeatPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList2.add(0d);
-				valueList2.add(0d);
-				homoDeviceFamilyMap.replace("Seat", valueList2);
 			}
 
 			// *****************************************************************************************************
@@ -592,19 +514,6 @@ public class HomogeniserBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = valveFamilyMap.get("Valve").get(1);
-			if (consumption == 0d) {
-				valueList.add(new BigDecimal(String.valueOf(getValvePotential())).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				valveFamilyMap.replace("Valve", valueList);
-			}
-
 			// *****************************************************************************************************
 
 			// Aggregate Valve sealing consumption grouped per customer group
@@ -641,19 +550,6 @@ public class HomogeniserBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption1 = valveFamilyMap.get("Valve sealing").get(1);
-			if (consumption1 == 0d) {
-				valueList1.add(new BigDecimal(String.valueOf(getValveSealingPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList1.add(0d);
-				valueList1.add(0d);
-				valveFamilyMap.replace("Valve sealing", valueList1);
-			}
-
 			// *****************************************************************************************************
 
 			// Aggregate Valve seat consumption grouped per customer group
@@ -688,19 +584,6 @@ public class HomogeniserBean implements Serializable {
 						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 				valveFamilyMap.replace("Valve seat", valueList2);
 
-			}
-
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption2 = valveFamilyMap.get("Valve seat").get(1);
-			if (consumption2 == 0d) {
-				valueList2.add(new BigDecimal(String.valueOf(getValveSeatPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList2.add(0d);
-				valueList2.add(0d);
-				valveFamilyMap.replace("Valve seat", valueList2);
 			}
 
 			// *****************************************************************************************************
@@ -758,19 +641,6 @@ public class HomogeniserBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = crankcaseFamilyMap.get("Plain bearing").get(1);
-			if (consumption == 0d) {
-				valueList.add(new BigDecimal(String.valueOf(getPlainBearingPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				crankcaseFamilyMap.replace("Plain bearing", valueList);
-			}
-
 			// *****************************************************************************************************
 
 			// Aggregate Roller bearing consumption grouped per customer group
@@ -807,19 +677,6 @@ public class HomogeniserBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption1 = crankcaseFamilyMap.get("Roller bearing").get(1);
-			if (consumption1 == 0d) {
-				valueList1.add(new BigDecimal(String.valueOf(getRollerBearingPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList1.add(0d);
-				valueList1.add(0d);
-				crankcaseFamilyMap.replace("Roller bearing", valueList1);
-			}
-
 			// *****************************************************************************************************
 
 			// Aggregate Bellow consumption grouped per customer group
@@ -854,19 +711,6 @@ public class HomogeniserBean implements Serializable {
 						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 				crankcaseFamilyMap.replace("Bellow", valueList2);
 
-			}
-
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption2 = crankcaseFamilyMap.get("Bellow").get(1);
-			if (consumption2 == 0d) {
-				valueList2.add(new BigDecimal(String.valueOf(getBellowPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList2.add(0d);
-				valueList2.add(0d);
-				crankcaseFamilyMap.replace("Bellow", valueList2);
 			}
 
 			// *****************************************************************************************************

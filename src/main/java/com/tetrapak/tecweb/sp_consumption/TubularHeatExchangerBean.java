@@ -264,19 +264,6 @@ public class TubularHeatExchangerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = cTypeFamilyMap.get("O-ring insert, Non-regenerative").get(1);
-			if (consumption == 0d) {
-				valueList.add(new BigDecimal(String.valueOf(getoRingInsertNonRegCpotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				cTypeFamilyMap.replace("O-ring insert, Non-regenerative", valueList);
-			}
-
 			// *****************************************************************************************************
 
 			// Aggregate O-ring shell, Non-regenerative, consumption grouped per
@@ -312,19 +299,6 @@ public class TubularHeatExchangerBean implements Serializable {
 						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 				cTypeFamilyMap.replace("O-ring shell, Non-regenerative", valueList1);
 
-			}
-
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption1 = cTypeFamilyMap.get("O-ring shell, Non-regenerative").get(1);
-			if (consumption1 == 0d) {
-				valueList1.add(new BigDecimal(String.valueOf(getoRingShellNonRegCpotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList1.add(0d);
-				valueList1.add(0d);
-				cTypeFamilyMap.replace("O-ring shell, Non-regenerative", valueList1);
 			}
 
 			// *****************************************************************************************************
@@ -364,19 +338,6 @@ public class TubularHeatExchangerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption2 = cTypeFamilyMap.get("O-ring insert, Regenerative").get(1);
-			if (consumption2 == 0d) {
-				valueList2.add(new BigDecimal(String.valueOf(getoRingInsertRegCpotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList2.add(0d);
-				valueList2.add(0d);
-				cTypeFamilyMap.replace("O-ring insert, Regenerative", valueList2);
-			}
-
 			// *****************************************************************************************************
 
 			// Aggregate O-ring shell, Regenerative, consumption grouped per
@@ -414,19 +375,6 @@ public class TubularHeatExchangerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption3 = cTypeFamilyMap.get("O-ring shell, Regenerative").get(1);
-			if (consumption3 == 0d) {
-				valueList3.add(new BigDecimal(String.valueOf(getoRingInsertRegCpotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList3.add(0d);
-				valueList3.add(0d);
-				cTypeFamilyMap.replace("O-ring shell, Regenerative", valueList3);
-			}
-
 			// *****************************************************************************************************
 
 			// Aggregate O-ring holding, consumption grouped per customer group
@@ -461,19 +409,6 @@ public class TubularHeatExchangerBean implements Serializable {
 						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 				cTypeFamilyMap.replace("O-ring holding", valueList4);
 
-			}
-
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption4 = cTypeFamilyMap.get("O-ring holding").get(1);
-			if (consumption4 == 0d) {
-				valueList4.add(new BigDecimal(String.valueOf(getoRingHoldingCpotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList4.add(0d);
-				valueList4.add(0d);
-				cTypeFamilyMap.replace("O-ring holding", valueList4);
 			}
 
 			// *****************************************************************************************************
@@ -530,20 +465,6 @@ public class TubularHeatExchangerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = mtTypeFamilyMap.get("O-ring insert").get(1);
-			if (consumption == 0d) {
-				double potentialCombined = getoRingInsertNonRegMTpotential() + getoRingInsertRegMTpotential();
-				valueList.add(new BigDecimal(String.valueOf(potentialCombined)).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				mtTypeFamilyMap.replace("O-ring insert", valueList);
-			}
-
 			// *****************************************************************************************************
 
 			// Aggregate O-ring shell, consumption grouped per
@@ -578,20 +499,6 @@ public class TubularHeatExchangerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption1 = mtTypeFamilyMap.get("O-ring shell").get(1);
-			if (consumption1 == 0d) {
-				double potentialCombined = getoRingShellNonRegMTpotential() + getoRingShellRegMTpotential();
-				valueList1.add(new BigDecimal(String.valueOf(potentialCombined)).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				valueList1.add(0d);
-				valueList1.add(0d);
-				mtTypeFamilyMap.replace("O-ring shell", valueList1);
-			}
-
 			// *****************************************************************************************************
 
 			// Aggregate O-ring holding, consumption grouped per customer group
@@ -623,19 +530,6 @@ public class TubularHeatExchangerBean implements Serializable {
 						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 				mtTypeFamilyMap.replace("O-ring holding", valueList2);
 
-			}
-
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption2 = mtTypeFamilyMap.get("O-ring holding").get(1);
-			if (consumption2 == 0d) {
-				valueList2.add(new BigDecimal(String.valueOf(getoRingHoldingMTpotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList2.add(0d);
-				valueList2.add(0d);
-				mtTypeFamilyMap.replace("O-ring holding", valueList2);
 			}
 
 			// *****************************************************************************************************
@@ -691,19 +585,6 @@ public class TubularHeatExchangerBean implements Serializable {
 						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 				cMtTypeFamilyMap.replace("Product seal", valueList);
 
-			}
-
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = cMtTypeFamilyMap.get("Product seal").get(1);
-			if (consumption == 0d) {
-				valueList.add(new BigDecimal(String.valueOf(getProdSealCMTpotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				cMtTypeFamilyMap.replace("Product seal", valueList);
 			}
 
 		} catch (ClientException e) {

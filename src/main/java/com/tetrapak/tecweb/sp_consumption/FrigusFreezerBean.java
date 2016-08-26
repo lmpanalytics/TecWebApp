@@ -290,19 +290,6 @@ public class FrigusFreezerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = serviceKitsFamilyMap.get("1000 service kit").get(1);
-			if (consumption == 0d) {
-				valueList.add(new BigDecimal(String.valueOf(getKit1000Potential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				serviceKitsFamilyMap.replace("1000 service kit", valueList);
-			}
-
 			// *****************************************************************************************************
 
 			/*
@@ -340,19 +327,6 @@ public class FrigusFreezerBean implements Serializable {
 						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 				serviceKitsFamilyMap.replace("3000 service kit", valueList1);
 
-			}
-
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption1 = serviceKitsFamilyMap.get("3000 service kit").get(1);
-			if (consumption1 == 0d) {
-				valueList1.add(new BigDecimal(String.valueOf(getKit3000Potential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList1.add(0d);
-				valueList1.add(0d);
-				serviceKitsFamilyMap.replace("3000 service kit", valueList1);
 			}
 
 			// *****************************************************************************************************
@@ -394,19 +368,6 @@ public class FrigusFreezerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption2 = serviceKitsFamilyMap.get("6000 service kit").get(1);
-			if (consumption2 == 0d) {
-				valueList2.add(new BigDecimal(String.valueOf(getKit6000Potential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList2.add(0d);
-				valueList2.add(0d);
-				serviceKitsFamilyMap.replace("6000 service kit", valueList2);
-			}
-
 			// *****************************************************************************************************
 
 			/*
@@ -444,19 +405,6 @@ public class FrigusFreezerBean implements Serializable {
 						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 				serviceKitsFamilyMap.replace("12000 service kit", valueList3);
 
-			}
-
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption3 = serviceKitsFamilyMap.get("12000 service kit").get(1);
-			if (consumption3 == 0d) {
-				valueList3.add(new BigDecimal(String.valueOf(getKit12000Potential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList3.add(0d);
-				valueList3.add(0d);
-				serviceKitsFamilyMap.replace("12000 service kit", valueList3);
 			}
 
 			// *****************************************************************************************************
@@ -514,19 +462,6 @@ public class FrigusFreezerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = pumpFamilyMap.get("New pump").get(1);
-			if (consumption == 0d) {
-				valueList.add(new BigDecimal(String.valueOf(getNewPumpPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				pumpFamilyMap.replace("New pump", valueList);
-			}
-
 			// *****************************************************************************************************
 
 			/*
@@ -563,19 +498,6 @@ public class FrigusFreezerBean implements Serializable {
 						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 				pumpFamilyMap.replace("Exchange pump", valueList1);
 
-			}
-
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption1 = pumpFamilyMap.get("Exchange pump").get(1);
-			if (consumption1 == 0d) {
-				valueList1.add(new BigDecimal(String.valueOf(getExchangePumpPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList1.add(0d);
-				valueList1.add(0d);
-				pumpFamilyMap.replace("Exchange pump", valueList1);
 			}
 
 			// *****************************************************************************************************
@@ -632,19 +554,6 @@ public class FrigusFreezerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = pumpSparePartsFamilyMap.get("Kit extended").get(1);
-			if (consumption == 0d) {
-				valueList.add(new BigDecimal(String.valueOf(getKitExtendedPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				pumpSparePartsFamilyMap.replace("Kit extended", valueList);
-			}
-
 			// *****************************************************************************************************
 
 			/*
@@ -681,19 +590,6 @@ public class FrigusFreezerBean implements Serializable {
 						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 				pumpSparePartsFamilyMap.replace("Star wheel", valueList1);
 
-			}
-
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption1 = pumpSparePartsFamilyMap.get("Star wheel").get(1);
-			if (consumption1 == 0d) {
-				valueList1.add(new BigDecimal(String.valueOf(getStarWheelPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList1.add(0d);
-				valueList1.add(0d);
-				pumpSparePartsFamilyMap.replace("Star wheel", valueList1);
 			}
 
 			// *****************************************************************************************************
@@ -734,19 +630,6 @@ public class FrigusFreezerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption2 = pumpSparePartsFamilyMap.get("Cover").get(1);
-			if (consumption2 == 0d) {
-				valueList2.add(new BigDecimal(String.valueOf(getCoverPotential())).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				valueList2.add(0d);
-				valueList2.add(0d);
-				pumpSparePartsFamilyMap.replace("Cover", valueList2);
-			}
-
 			// *****************************************************************************************************
 
 			/*
@@ -783,19 +666,6 @@ public class FrigusFreezerBean implements Serializable {
 						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 				pumpSparePartsFamilyMap.replace("Impeller", valueList3);
 
-			}
-
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption3 = pumpSparePartsFamilyMap.get("Impeller").get(1);
-			if (consumption3 == 0d) {
-				valueList3.add(new BigDecimal(String.valueOf(getImpellerPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList3.add(0d);
-				valueList3.add(0d);
-				pumpSparePartsFamilyMap.replace("Impeller", valueList3);
 			}
 
 			// *****************************************************************************************************
@@ -836,19 +706,6 @@ public class FrigusFreezerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption4 = pumpSparePartsFamilyMap.get("Gasket kit").get(1);
-			if (consumption4 == 0d) {
-				valueList4.add(new BigDecimal(String.valueOf(getGasketKitPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList4.add(0d);
-				valueList4.add(0d);
-				pumpSparePartsFamilyMap.replace("Gasket kit", valueList4);
-			}
-
 			// *****************************************************************************************************
 
 			/*
@@ -885,19 +742,6 @@ public class FrigusFreezerBean implements Serializable {
 						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 				pumpSparePartsFamilyMap.replace("Bushing", valueList5);
 
-			}
-
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption5 = pumpSparePartsFamilyMap.get("Bushing").get(1);
-			if (consumption5 == 0d) {
-				valueList5.add(new BigDecimal(String.valueOf(getBushingPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList5.add(0d);
-				valueList5.add(0d);
-				pumpSparePartsFamilyMap.replace("Bushing", valueList5);
 			}
 
 			// *****************************************************************************************************
@@ -956,19 +800,6 @@ public class FrigusFreezerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = scraperFamilyMap.get("Scraper knife").get(1);
-			if (consumption == 0d) {
-				valueList.add(new BigDecimal(String.valueOf(getScraperKnifePotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				scraperFamilyMap.replace("Scraper knife", valueList);
-			}
-
 			// *****************************************************************************************************
 
 		} catch (ClientException e) {
@@ -1022,19 +853,6 @@ public class FrigusFreezerBean implements Serializable {
 						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 				coolingFamilyMap.replace("Spare part", valueList);
 
-			}
-
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = coolingFamilyMap.get("Spare part").get(1);
-			if (consumption == 0d) {
-				valueList.add(new BigDecimal(String.valueOf(getSparePartsPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				coolingFamilyMap.replace("Spare part", valueList);
 			}
 
 			// *****************************************************************************************************
@@ -1092,19 +910,6 @@ public class FrigusFreezerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = shaftFamilyMap.get("Shaft seal").get(1);
-			if (consumption == 0d) {
-				valueList.add(new BigDecimal(String.valueOf(getShaftSealPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				shaftFamilyMap.replace("Shaft seal", valueList);
-			}
-
 			// *****************************************************************************************************
 
 		} catch (ClientException e) {
@@ -1160,19 +965,6 @@ public class FrigusFreezerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = cylinderFamilyMap.get("Cylinder kit").get(1);
-			if (consumption == 0d) {
-				valueList.add(new BigDecimal(String.valueOf(getCylKitPotential())).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				cylinderFamilyMap.replace("Cylinder kit", valueList);
-			}
-
 			// *****************************************************************************************************
 
 			/*
@@ -1209,19 +1001,6 @@ public class FrigusFreezerBean implements Serializable {
 						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 				cylinderFamilyMap.replace("Gasket", valueList1);
 
-			}
-
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption1 = cylinderFamilyMap.get("Gasket").get(1);
-			if (consumption1 == 0d) {
-				valueList1.add(new BigDecimal(String.valueOf(getGasketPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList1.add(0d);
-				valueList1.add(0d);
-				cylinderFamilyMap.replace("Gasket", valueList1);
 			}
 
 			// *****************************************************************************************************
@@ -1280,19 +1059,6 @@ public class FrigusFreezerBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = dasherFamilyMap.get("Dasher kit").get(1);
-			if (consumption == 0d) {
-				valueList.add(new BigDecimal(String.valueOf(getDasherKitPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				dasherFamilyMap.replace("Dasher kit", valueList);
-			}
-
 			// *****************************************************************************************************
 
 			/*
@@ -1329,19 +1095,6 @@ public class FrigusFreezerBean implements Serializable {
 						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 				dasherFamilyMap.replace("Single part", valueList1);
 
-			}
-
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption1 = dasherFamilyMap.get("Single part").get(1);
-			if (consumption1 == 0d) {
-				valueList1.add(new BigDecimal(String.valueOf(getSinglePartPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList1.add(0d);
-				valueList1.add(0d);
-				dasherFamilyMap.replace("Single part", valueList1);
 			}
 
 			// *****************************************************************************************************

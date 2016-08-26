@@ -225,19 +225,6 @@ public class SeparatorBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption = kitFamilyMap.get("Intermediate service kit").get(1);
-			if (consumption == 0d) {
-				valueList.add(new BigDecimal(String.valueOf(getiMKitPotential())).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				valueList.add(0d);
-				valueList.add(0d);
-				kitFamilyMap.replace("Intermediate service kit", valueList);
-			}
-
 			// *****************************************************************************************************
 
 			// Aggregate Major service kit consumption grouped per customer
@@ -273,19 +260,6 @@ public class SeparatorBean implements Serializable {
 						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 				kitFamilyMap.replace("Major service kit", valueList1);
 
-			}
-
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption1 = kitFamilyMap.get("Major service kit").get(1);
-			if (consumption1 == 0d) {
-				valueList1.add(new BigDecimal(String.valueOf(getmSKitPotential())).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				valueList1.add(0d);
-				valueList1.add(0d);
-				kitFamilyMap.replace("Major service kit", valueList1);
 			}
 
 			// *****************************************************************************************************
@@ -324,19 +298,6 @@ public class SeparatorBean implements Serializable {
 
 			}
 
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption2 = kitFamilyMap.get("OWMC service kit").get(1);
-			if (consumption2 == 0d) {
-				valueList2.add(new BigDecimal(String.valueOf(getoWMCkitPotential()))
-						.setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valueList2.add(0d);
-				valueList2.add(0d);
-				kitFamilyMap.replace("OWMC service kit", valueList2);
-			}
-
 			// *****************************************************************************************************
 
 			// Aggregate Foundation feet service kit consumption grouped per
@@ -372,19 +333,6 @@ public class SeparatorBean implements Serializable {
 						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
 				kitFamilyMap.replace("Foundation feet service kit", valueList3);
 
-			}
-
-			/*
-			 * If there has been no consumption then the above code doesn't add
-			 * any calculated potential. This case is handled below.
-			 */
-			Double consumption3 = kitFamilyMap.get("Foundation feet service kit").get(1);
-			if (consumption3 == 0d) {
-				valueList3.add(new BigDecimal(String.valueOf(getfFkitPotential())).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				valueList3.add(0d);
-				valueList3.add(0d);
-				kitFamilyMap.replace("Foundation feet service kit", valueList3);
 			}
 
 			// *****************************************************************************************************
