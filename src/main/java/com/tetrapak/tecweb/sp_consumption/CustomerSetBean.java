@@ -59,12 +59,12 @@ public class CustomerSetBean implements Serializable {
 	// private Set<String> custNumberSet;
 	private Map<String, String> custNumberMap;
 
-	private String selectedCluster;
-	private String selectedMarketGroup;
-	private String selectedMarket;
-	private String selectedCustGroup;
-	private String selectedCustNumber;
-	private String selectedCustName;
+	private String selectedCluster = "";
+	private String selectedMarketGroup = "";
+	private String selectedMarket = "";
+	private String selectedCustGroup = "";
+	private String selectedCustNumber = "";
+	private String selectedCustName = "";
 
 	private boolean isCentralTeamUser;
 	private boolean isTPPC_User;
