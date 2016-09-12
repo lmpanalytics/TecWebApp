@@ -46,8 +46,9 @@
 			<p>MARKET: #{customerSetBean.selectedMarket}</p>
 			<p>CUSTOMER GROUP: #{customerSetBean.selectedCustGroup}</p>
 			<p>CUSTOMER NUMBER: #{customerSetBean.selectedCustNumber}</p>
-			<p>#{customerSetBean.selectedCustNumber=="ALL CUSTOMER NUMBERS"? '' : 'CUSTOMER NAME:'}
-			 #{customerSetBean.selectedCustNumber=="ALL CUSTOMER NUMBERS"? '' : customerSetBean.selectedCustName}</p>
+			<p>#{customerSetBean.selectedCustNumber=="ALL CUSTOMER NUMBERS"?
+				'' : 'CUSTOMER NAME:'} #{customerSetBean.selectedCustNumber=="ALL
+				CUSTOMER NUMBERS"? '' : customerSetBean.selectedCustName}</p>
 			<p></p>
 			<h:graphicImage url="#{resource['images:freezer.png']}"
 				alt="Freegus freezer pic" />
@@ -56,6 +57,9 @@
 		<h:form>
 			<p></p>
 			<h2>Service kits</h2>
+			<p></p>
+			<h:graphicImage url="#{resource['images:service_kits_freezer.png']}"
+				alt="Freezer service kits pic" />
 			<p></p>
 			<h:dataTable border="0"
 				value="#{frigusFreezerBean.serviceKitsFamilyMap.entrySet().toArray()}"
@@ -90,6 +94,9 @@
 		<h:form>
 			<p></p>
 			<h2>Pump</h2>
+			<p></p>
+			<h:graphicImage url="#{resource['images:pump_freezer.png']}"
+				alt="Freezer pump pic" />
 			<p></p>
 			<h:dataTable border="0"
 				value="#{frigusFreezerBean.pumpFamilyMap.entrySet().toArray()}"
@@ -126,6 +133,10 @@
 			<p></p>
 			<h2>Pump spare parts</h2>
 			<p></p>
+			<h:graphicImage
+				url="#{resource['images:pump_spare_parts_freezer.png']}"
+				alt="Freezer pump spare parts pic" />
+			<p></p>
 			<h:dataTable border="0"
 				value="#{frigusFreezerBean.pumpSparePartsFamilyMap.entrySet().toArray()}"
 				var="map">
@@ -160,6 +171,9 @@
 		<h:form>
 			<p></p>
 			<h2>Scraper</h2>
+			<p></p>
+			<h:graphicImage url="#{resource['images:scraper_freezer.png']}"
+				alt="Freezer scraper pic" />
 			<p></p>
 			<h:dataTable border="0"
 				value="#{frigusFreezerBean.scraperFamilyMap.entrySet().toArray()}"
@@ -196,6 +210,9 @@
 			<p></p>
 			<h2>Cooling</h2>
 			<p></p>
+			<h:graphicImage url="#{resource['images:cooling_freezer.png']}"
+				alt="Freezer cooling pic" />
+			<p></p>
 			<h:dataTable border="0"
 				value="#{frigusFreezerBean.coolingFamilyMap.entrySet().toArray()}"
 				var="map">
@@ -229,7 +246,10 @@
 
 		<h:form>
 			<p></p>
-			<h2>Shaft</h2>
+			<h2>Shaft seal</h2>
+			<p></p>
+			<h:graphicImage url="#{resource['images:shaft_freezer.png']}"
+				alt="Freezer shaft pic" />
 			<p></p>
 			<h:dataTable border="0"
 				value="#{frigusFreezerBean.shaftFamilyMap.entrySet().toArray()}"
@@ -266,6 +286,9 @@
 			<p></p>
 			<h2>Cylinder</h2>
 			<p></p>
+			<h:graphicImage url="#{resource['images:cylinder_freezer.png']}"
+				alt="Freezer cylinder pic" />
+			<p></p>
 			<h:dataTable border="0"
 				value="#{frigusFreezerBean.cylinderFamilyMap.entrySet().toArray()}"
 				var="map">
@@ -300,6 +323,9 @@
 		<h:form>
 			<p></p>
 			<h2>Dasher</h2>
+			<p></p>
+			<h:graphicImage url="#{resource['images:dasher_freezer.png']}"
+				alt="Freezer dasher pic" />
 			<p></p>
 			<h:dataTable border="0"
 				value="#{frigusFreezerBean.dasherFamilyMap.entrySet().toArray()}"
