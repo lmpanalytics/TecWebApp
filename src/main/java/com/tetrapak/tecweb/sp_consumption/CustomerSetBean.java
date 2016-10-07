@@ -593,8 +593,9 @@ public class CustomerSetBean implements Serializable {
 				Record r = result.next();
 				String key = r.get("ID").asString();
 				String name = r.get("name").asString();
-				// String compositeKey = r.get("compositeKey").asString();
-				custNumberMap.put(key, name);
+				String compositeKey = r.get("compositeKey").asString();
+				// custNumberMap.put(key, name);
+				custNumberMap.put(compositeKey, name);
 
 			}
 
@@ -767,7 +768,15 @@ public class CustomerSetBean implements Serializable {
 	 * @return the selectedCustNumber
 	 */
 	public String getSelectedCustNumber() {
-		return selectedCustNumber;
+		String customerNumber;
+
+		if (this.selectedCustNumber.equals("ALL CUSTOMER NUMBERS")) {
+			customerNumber = this.selectedCustNumber;
+		} else {
+			// Keep only numbers from the composite number-and-text key
+			customerNumber = this.selectedCustNumber.replaceAll("[^0-9]", "");
+		}
+		return customerNumber;
 	}
 
 	/**
