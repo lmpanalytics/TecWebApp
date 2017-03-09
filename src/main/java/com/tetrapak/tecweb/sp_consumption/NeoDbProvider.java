@@ -1,5 +1,6 @@
 package com.tetrapak.tecweb.sp_consumption;
 
+import javax.annotation.PreDestroy;
 import javax.ejb.LocalBean;
 import javax.ejb.Singleton;
 
@@ -18,17 +19,26 @@ import org.neo4j.driver.v1.exceptions.ClientException;
 @LocalBean
 public class NeoDbProvider {
 
-	private static final String HOSTNAME = "localhost";
+	private static final String HOSTNAME = "localhost:7687";
 	// 'For most use cases it is recommended to use a single driver instance
 	// throughout an application.'
-	private static final Driver DRIVER = GraphDatabase.driver("bolt://" + HOSTNAME + "", AuthTokens.basic("neo4j", "Tokyo2000"));
-//private static final Driver DRIVER = GraphDatabase.driver("bolt://" + HOSTNAME + "", AuthTokens.basic("neo4j", "s7asTaba"));
+	private static final Driver DRIVER = GraphDatabase.driver("bolt://" + HOSTNAME + "",
+			AuthTokens.basic("neo4j", "Tokyo2000"));
+	// private static final Driver DRIVER = GraphDatabase.driver("bolt://" +
+	// HOSTNAME + "", AuthTokens.basic("neo4j", "s7asTaba"));
 
 	/**
 	 * Default constructor.
 	 */
 	public NeoDbProvider() {
 		// TODO Auto-generated constructor stub
+	}
+
+	@PreDestroy
+	public void destroyMe() {
+		DRIVER.session().close();
+		DRIVER.close();
+		System.out.println("Neo4jDriver in the NeoDbProvider has been disposed of.");
 	}
 
 	/**

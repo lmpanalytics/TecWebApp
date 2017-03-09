@@ -45,7 +45,7 @@ import org.neo4j.driver.v1.exceptions.ClientException;
 public class CustomerSetBean implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-
+	
 	@Resource
 	SessionContext ctx;
 
@@ -122,6 +122,7 @@ public class CustomerSetBean implements Serializable {
 		queryCustNumberMap();
 
 	}
+	
 
 	/**
 	 * Make collection of all Clusters
@@ -181,7 +182,7 @@ public class CustomerSetBean implements Serializable {
 		} catch (ClientException e) {
 			System.err.println("Exception in 'queryClusterSet()':" + e);
 		} finally {
-			neoDbProvider.closeNeo4jDriver();
+		//	neoDbProvider.closeNeo4jDriver();
 			// System.out.printf("size of clusterSet is %s::\n",
 			// clusterSet.size());
 
@@ -238,7 +239,7 @@ public class CustomerSetBean implements Serializable {
 			System.err.println("Exception in 'queryMarketGroupSet()':" + e);
 			System.out.printf("Size of marketGroupSet is %s.\n", marketGroupSet.size());
 		} finally {
-			neoDbProvider.closeNeo4jDriver();
+		//	neoDbProvider.closeNeo4jDriver();
 			// System.out.printf("size of marketGroupSet is %s::\n",
 			// marketGroupSet.size());
 
@@ -305,7 +306,6 @@ public class CustomerSetBean implements Serializable {
 			System.err.println("Exception in 'queryMarketSet()':" + e);
 			System.out.printf("Size of marketSet is %s.\n", marketSet.size());
 		} finally {
-			neoDbProvider.closeNeo4jDriver();
 			// System.out.printf("size of marketSet is %s::\n",
 			// marketSet.size());
 
@@ -394,7 +394,7 @@ public class CustomerSetBean implements Serializable {
 		} catch (ClientException e) {
 			System.err.println("Exception in 'getCustGroupSet()':" + e);
 		} finally {
-			neoDbProvider.closeNeo4jDriver();
+		//	neoDbProvider.closeNeo4jDriver();
 			// System.out.printf("size of custGroupSet is %s::\n",
 			// custGroupSet.size());
 
@@ -604,7 +604,7 @@ public class CustomerSetBean implements Serializable {
 		} catch (ClientException e) {
 			System.err.println("Exception in 'getCustNumberMap()':" + e);
 		} finally {
-			neoDbProvider.closeNeo4jDriver();
+		//	neoDbProvider.closeNeo4jDriver();
 			// System.out.printf("size of CustNumberMap is %s::\n",
 			// custNumberMap.size());
 

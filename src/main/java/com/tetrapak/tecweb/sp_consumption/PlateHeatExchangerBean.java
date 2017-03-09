@@ -117,8 +117,8 @@ public class PlateHeatExchangerBean implements Serializable {
 	@PreDestroy
 	public void destroyMe() {
 
-		neoDbProvider.closeNeo4jDriver();
-		System.out.println("Neo4jDriver in the PlateHeatExchangerBean have been disposed of.");
+//		neoDbProvider.closeNeo4jDriver();
+//		System.out.println("Neo4jDriver in the PlateHeatExchangerBean have been disposed of.");
 	}
 
 	/**

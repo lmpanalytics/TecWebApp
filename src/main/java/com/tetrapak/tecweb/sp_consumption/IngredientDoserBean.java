@@ -153,8 +153,8 @@ public class IngredientDoserBean implements Serializable {
 
 	@PreDestroy
 	public void destroyMe() {
-		neoDbProvider.closeNeo4jDriver();
-		System.out.println("Neo4jDriver in the IngredientDoserBean have been disposed of.");
+//		neoDbProvider.closeNeo4jDriver();
+//		System.out.println("Neo4jDriver in the IngredientDoserBean have been disposed of.");
 	}
 
 	/**

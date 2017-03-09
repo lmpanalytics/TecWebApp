@@ -131,8 +131,8 @@ public class HomogeniserBean implements Serializable {
 	@PreDestroy
 	public void destroyMe() {
 
-		neoDbProvider.closeNeo4jDriver();
-		System.out.println("Neo4jDriver in the HomogeniserBean have been disposed of.");
+//		neoDbProvider.closeNeo4jDriver();
+//		System.out.println("Neo4jDriver in the HomogeniserBean have been disposed of.");
 	}
 
 	/**
