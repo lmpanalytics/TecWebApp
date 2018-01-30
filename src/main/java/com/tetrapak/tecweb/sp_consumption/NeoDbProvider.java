@@ -1,4 +1,4 @@
-package com.tetrapak.tecweb.sp_consumption;
+package main.java.com.tetrapak.tecweb.sp_consumption;
 
 import javax.annotation.PreDestroy;
 import javax.ejb.LocalBean;

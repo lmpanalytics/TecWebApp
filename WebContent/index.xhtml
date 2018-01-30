@@ -102,15 +102,15 @@
 			<p></p>
 			<h:selectOneMenu id="customerNumberSet" title="Final customer number"
 				required="true" value="#{customerSetBean.selectedCustNumber}"
-				requiredMessage="Select a customer number">
+				requiredMessage="Select a customer number">				
 				<f:selectItem itemLabel="Choose customer number .."
 					itemValue="#{null}" />
 				<f:selectItems 	value="#{customerSetBean.custNumberMap.keySet()}" />
 			</h:selectOneMenu>
 			<p></p>
 
-			<h:commandButton id="queryCustNo" value="Apply and Query Customer number"
-				click="#{customerSetBean.getSelectedCustNumber}"
+                        <h:commandButton id="queryCustNo" value="Apply and Query Customer number"
+                                         onclick="#{customerSetBean.selectedCustNumber}"
 				action="calculate">
 			</h:commandButton>
 			<!-- 			<h:commandButton id="reset" value="Reset" type="reset"> -->
