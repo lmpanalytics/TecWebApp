@@ -1,124 +1,116 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:h="http://xmlns.jcp.org/jsf/html"
-	xmlns:f="http://xmlns.jcp.org/jsf/core">
-<h:head>
-	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
-	<h:outputStylesheet library="css" name="default.css" />
-	<title>TecWeb Index</title>
-</h:head>
-<h:body>
-	<!--         Some text -->
-	<f:view>
-		<h:form>
-			<!-- 			<h:graphicImage url="#{resource['images:Alex_TD_valve.png']}" alt="Valve pic" /> -->
-			<h1>Market and Customer Selections</h1>
-			<h3>Select Cluster, Market group, Market, Customer group and Final
-				customer number</h3>
-			<p></p>
-		</h:form>
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+    <h:head>
+        <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+        <h:outputStylesheet library="css" name="default.css" />
+        <title>TecWeb Index</title>
+    </h:head>
+    <h:body>
+        <f:view>
+            <h:form>
+                <h1>Market and Customer Selections</h1>
+                <h3>Select Cluster, Market group, Market, Customer group and Final
+                    customer number</h3>
+                <p></p>
+            </h:form>
 
-		<h:form>
-			<h:selectOneMenu id="clusterSet" title="Clusters" required="true"
-				value="#{customerSetBean.selectedCluster}"
-				requiredMessage="Select a cluster">
-				<f:selectItem itemLabel="Choose cluster .." itemValue="#{null}" />
-				<f:selectItems value="#{customerSetBean.clusterSet}" />
+            <h:form>
+                <h:panelGrid columns="2" cellpadding="5"> 
+                    <p:selectOneMenu id="clusterSet" 
+                                     title="Clusters" 
+                                     required="true" 
+                                     style="width:250px" 
+                                     value="#{customerSetBean.selectedCluster}"			
+                                     requiredMessage="Select a cluster">
+                        <f:selectItem itemLabel="Choose cluster .." itemValue="#{null}" />
+                        <f:selectItems value="#{customerSetBean.clusterSet}" />
+                    </p:selectOneMenu>
 
-			</h:selectOneMenu>
-			<h:commandButton id="applyCluster" value="Apply"
-				action="#{customerSetBean.queryMarketGroupSet}">
-			</h:commandButton>
-		</h:form>
+                    <h:commandButton id="applyCluster" value="Apply"
+                                     action="#{customerSetBean.queryMarketGroupSet}">
+                    </h:commandButton>
+                </h:panelGrid>
+            </h:form>
 
+            <h:form>
+                <h:panelGrid columns="2" cellpadding="5"> 
+                    <p:selectOneMenu id="marketGroupSet" 
+                                     title="Market groups"
+                                     required="true" 
+                                     style="width:250px" 
+                                     value="#{customerSetBean.selectedMarketGroup}"
+                                     requiredMessage="Select a market group">
+                        <f:selectItem itemLabel="Choose market group .." itemValue="#{null}" />
+                        <f:selectItems value="#{customerSetBean.marketGroupSet}" />
+                    </p:selectOneMenu>
 
-		<h:form>
-			<!-- 			<h:graphicImage url="#{resource['images:Alex_TD_valve.png']}" alt="Valve pic" /> -->
-			<p></p>
-		</h:form>
+                    <h:commandButton id="applyMarketGroup" value="Apply"
+                                     action="#{customerSetBean.queryMarketSet}">
+                    </h:commandButton>
+                </h:panelGrid>
+            </h:form>
 
-		<h:form>
-			<p></p>
-			<h:selectOneMenu id="marketGroupSet" title="Market groups"
-				required="true" value="#{customerSetBean.selectedMarketGroup}"
-				requiredMessage="Select a market group">
-				<f:selectItem itemLabel="Choose market group .." itemValue="#{null}" />
-				<f:selectItems value="#{customerSetBean.marketGroupSet}" />
+            <h:form>
+                <h:panelGrid columns="2" cellpadding="5"> 
+                    <p:selectOneMenu id="marketSet" 
+                                     title="Markets"
+                                     required="true" 
+                                     style="width:250px" 
+                                     value="#{customerSetBean.selectedMarket}"
+                                     requiredMessage="Select a market">
+                        <f:selectItem itemLabel="Choose market .." itemValue="#{null}" />
+                        <f:selectItems value="#{customerSetBean.marketSet}" />
+                    </p:selectOneMenu>
 
-			</h:selectOneMenu>
-			<h:commandButton id="applyMarketGroup" value="Apply"
-				action="#{customerSetBean.queryMarketSet}">
-			</h:commandButton>
-		</h:form>
+                    <h:commandButton id="applyMarket" value="Apply"
+                                     action="#{customerSetBean.queryCustGroupSet}">
+                    </h:commandButton>
+                </h:panelGrid>
+            </h:form>
 
-		<h:form>
-			<!-- 			<h:graphicImage url="#{resource['images:Alex_TD_valve.png']}" alt="Valve pic" /> -->
-			<p></p>
-		</h:form>
-		
-		<h:form>
-			<p></p>
-			<h:selectOneMenu id="marketSet" title="Markets"
-				required="true" value="#{customerSetBean.selectedMarket}"
-				requiredMessage="Select a market">
-				<f:selectItem itemLabel="Choose market .." itemValue="#{null}" />
-				<f:selectItems value="#{customerSetBean.marketSet}" />
+            <h:form>
+                <h:panelGrid columns="2" cellpadding="5"> 
+                    <p:selectOneMenu id="customerGroupSet" 
+                                     title="Customer group"
+                                     required="true" 
+                                     style="width:250px" 
+                                     value="#{customerSetBean.selectedCustGroup}"
+                                     requiredMessage="Select a customer group">
+                        <f:selectItem itemLabel="Choose customer group .."
+                                      itemValue="#{null}" />
+                        <f:selectItems value="#{customerSetBean.custGroupSet}" />
+                    </p:selectOneMenu>
 
-			</h:selectOneMenu>
-			<h:commandButton id="applyMarket" value="Apply"
-				action="#{customerSetBean.queryCustGroupSet}">
-			</h:commandButton>
-		</h:form>
+                    <h:commandButton id="applyCustGrp" value="Apply"
+                                     action="#{customerSetBean.queryCustNumberMap}">
+                    </h:commandButton>
+                </h:panelGrid>
+            </h:form>
 
-		<h:form>
-			<!-- 			<h:graphicImage url="#{resource['images:Alex_TD_valve.png']}" alt="Valve pic" /> -->
-			<p></p>
-		</h:form>
+            <h:form>
+                <h:panelGrid columns="2" cellpadding="5"> 
+                    <p:selectOneMenu id="customerNumberSet" 
+                                     title="Final customer number"
+                                     required="true" 
+                                     style="width:250px" 
+                                     value="#{customerSetBean.selectedCustNumber}"
+                                     requiredMessage="Select a customer number">				
+                        <f:selectItem itemLabel="Choose customer number .."
+                                      itemValue="#{null}" />
+                        <f:selectItems 	value="#{customerSetBean.custNumberMap.keySet()}" />
+                    </p:selectOneMenu>
 
-		<h:form>
-			<h:selectOneMenu id="customerGroupSet" title="Customer group"
-				required="true" value="#{customerSetBean.selectedCustGroup}"
-				requiredMessage="Select a customer group">
-				<f:selectItem itemLabel="Choose customer group .."
-					itemValue="#{null}" />
-				<f:selectItems value="#{customerSetBean.custGroupSet}" />
-			</h:selectOneMenu>
+                    <h:commandButton id="queryCustNo" value="Apply and Query Customer number"
+                                     onclick="#{customerSetBean.selectedCustNumber}"
+                                     action="calculate">
+                    </h:commandButton>
+                </h:panelGrid>
+            </h:form>
 
-			<h:commandButton id="applyCustGrp" value="Apply"
-				action="#{customerSetBean.queryCustNumberMap}">
-			</h:commandButton>
-			<p></p>
-
-			<!-- <h:commandButton id="queryCustGrp" value="Query Customer Group"
-				action="result_details">
-			</h:commandButton>-->
-
-			<!-- 			<h:commandButton id="reset" value="Reset" type="reset"> -->
-			<!-- 			</h:commandButton> -->
-		</h:form>
-
-		<h:form>
-			<p></p>
-			<h:selectOneMenu id="customerNumberSet" title="Final customer number"
-				required="true" value="#{customerSetBean.selectedCustNumber}"
-				requiredMessage="Select a customer number">				
-				<f:selectItem itemLabel="Choose customer number .."
-					itemValue="#{null}" />
-				<f:selectItems 	value="#{customerSetBean.custNumberMap.keySet()}" />
-			</h:selectOneMenu>
-			<p></p>
-
-                        <h:commandButton id="queryCustNo" value="Apply and Query Customer number"
-                                         onclick="#{customerSetBean.selectedCustNumber}"
-				action="calculate">
-			</h:commandButton>
-			<!-- 			<h:commandButton id="reset" value="Reset" type="reset"> -->
-			<!-- 			</h:commandButton> -->
-		</h:form>
-
-
-
-	</f:view>
-</h:body>
+        </f:view>
+    </h:body>
 </html>
