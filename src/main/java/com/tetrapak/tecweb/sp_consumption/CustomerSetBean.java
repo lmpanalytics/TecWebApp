@@ -759,7 +759,7 @@ public class CustomerSetBean implements Serializable {
                 }
 
                 // Join strings from arrays for jsf output text
-                StringJoiner sj1 = new StringJoiner(", ", "[", "]");
+                StringJoiner sj1 = new StringJoiner("; ", "[", "]");
                 for (String id : selectedIDs) {
                     sj1.add(id.trim());
                 }
@@ -770,7 +770,7 @@ public class CustomerSetBean implements Serializable {
                 }
                 
 
-                StringJoiner sj2 = new StringJoiner(",", "[", "]");
+                StringJoiner sj2 = new StringJoiner("; ", "[", "]");
                 for (String id : selectedCustNames) {
                     sj2.add(id.replaceAll("\\s*\\(", "").replaceAll("\\)", ""));
                 }
