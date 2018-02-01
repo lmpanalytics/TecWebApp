@@ -52,6 +52,9 @@
                 <p>CUSTOMER NUMBERS: #{customerSetBean.selectedIDsString} </p>                       
                 <p>#{customerSetBean.selectedIDsString=="ALL CUSTOMER NUMBERS"? '' : 'CUSTOMER NAMES:'}
                     #{customerSetBean.selectedIDsString=="ALL CUSTOMER NUMBERS"? '' : customerSetBean.selectedCustNamesString}</p>
+                <p></p>
+                <h:graphicImage url="#{resource['images:freezer.png']}"
+                                alt="Freegus freezer pic" />
             </h:form>
 
             <h:form>

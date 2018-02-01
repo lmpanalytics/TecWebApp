@@ -1,345 +1,350 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"
-	xmlns:h="http://xmlns.jcp.org/jsf/html"
-	xmlns:f="http://xmlns.jcp.org/jsf/core">
-<h:head>
-	<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
-	<h:outputStylesheet library="css" name="default.css" />
-	<title>IngredientDoser</title>
-</h:head>
-<h:body>
-	<h4>General</h4>
-	<p>This report lists 3-year average annual sales quantity of, and
-		theoretical consumption of, selected spare parts based on sales in SAP
-		and task list intervals. The report includes only machines reported as
-		'In Production' in SAP, built at least 3 years ago, and calculates
-		annual running hours from TecBase. The calculated results reflect the
-		total of the active equipments on site, whereas the ratio Consumption
-		over Potential can be seen as the average for the machines on site.</p>
-	<p>The sales of spare parts is assigned to the final customer
-		number in the Installed base if either the Sales record's Final
-		customer number OR Ship-to-Party number matches with the final
-		customer number in the Installed base.</p>
-	<h4>Interpretation of the ratio Consumption over Potential</h4>
-	<p>If '1.0', then the consumption of spare parts is in line with
-		standard task list recommendation, if over '1.2' the consumption is
-		somewhat too high and an equipment assessment on site could be next
-		step. If under '0.8' the consumption is somewhat too low and
-		promotional activities of e.g., optimization of maintenance systems
-		and use of genuine parts to increase equipment availability could be
-		directed to these customers. It can also be an indication of customers
-		using 'pirate spare parts', or buying genuine parts from other
-		channels than the local MC.</p>
-	<p>Other reasons for 'outliers' could be wrong user status in SAP
-		resulting in understated quantity of installed base, wrong reporting
-		in SAP of IB size, wrong running hours, purchase patterns not matching
-		real consumption of spare parts, and etc.</p>
+<html xmlns:a="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+    <h:head>
+        <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+        <h:outputStylesheet library="css" name="default.css" />
+        <title>IngredientDoser</title>
+    </h:head>
+    <h:body>
+        <h4>General</h4>
+        <p>This report lists 3-year average annual sales quantity of, and
+            theoretical consumption of, selected spare parts based on sales in SAP
+            and task list intervals. The report includes only machines reported as
+            'In Production' in SAP, built at least 3 years ago, and calculates
+            annual running hours from TecBase. The calculated results reflect the
+            total of the active equipments on site, whereas the ratio Consumption
+            over Potential can be seen as the average for the machines on site.</p>
+        <p>The sales of spare parts is assigned to the final customer
+            number in the Installed base if either the Sales record's Final
+            customer number OR Ship-to-Party number matches with the final
+            customer number in the Installed base.</p>
+        <h4>Interpretation of the ratio Consumption over Potential</h4>
+        <p>If '1.0', then the consumption of spare parts is in line with
+            standard task list recommendation, if over '1.2' the consumption is
+            somewhat too high and an equipment assessment on site could be next
+            step. If under '0.8' the consumption is somewhat too low and
+            promotional activities of e.g., optimization of maintenance systems
+            and use of genuine parts to increase equipment availability could be
+            directed to these customers. It can also be an indication of customers
+            using 'pirate spare parts', or buying genuine parts from other
+            channels than the local MC.</p>
+        <p>Other reasons for 'outliers' could be wrong user status in SAP
+            resulting in understated quantity of installed base, wrong reporting
+            in SAP of IB size, wrong running hours, purchase patterns not matching
+            real consumption of spare parts, and etc.</p>
         <h4>Useful links</h4>
         <a href="https://products.tetrapak.com/processingsolutions/IceCream/Pages/default.aspx">
             Product owner's homepage</a>
         <p></p>
-        
-	<f:view>
-		<h:form>
-			<p></p>
-			<h1>Ingredient doser analysis</h1>
-			<h3>Query filters</h3>
-			<p>CLUSTER: #{customerSetBean.selectedCluster}</p>
-			<p>MARKET GROUP: #{customerSetBean.selectedMarketGroup}</p>
-			<p>MARKET: #{customerSetBean.selectedMarket}</p>
-			<p>CUSTOMER GROUP: #{customerSetBean.selectedCustGroup}</p>
-			<p>CUSTOMER NUMBER: #{customerSetBean.selectedCustNumber}</p>
-			<p>#{customerSetBean.selectedCustNumber=="ALL CUSTOMER NUMBERS"?
-				'' : 'CUSTOMER NAME:'} #{customerSetBean.selectedCustNumber=="ALL
-				CUSTOMER NUMBERS"? '' : customerSetBean.selectedCustName}</p>
-			<p></p>
-			<h:graphicImage url="#{resource['images:doser.jpg']}"
-				alt="Ingredient doser pic" />
-		</h:form>
 
-		<h:form>
-			<p></p>
-			<h2>Service kits</h2>
-			<p></p>
-			<h:graphicImage url="#{resource['images:service_kits_doser.png']}"
-				alt="Ingredient doser service kits pic" />
-			<p></p>
-			<h:dataTable border="0"
-				value="#{ingredientDoserBean.serviceKitsFamilyMap.entrySet().toArray()}"
-				var="map">
-				<h:column id="column1">
-					<f:facet name="header">
-						<h:outputText value="Spare part family    | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.key}"></h:outputText>
-				</h:column>
-				<h:column id="column2">
-					<f:facet name="header">
-						<h:outputText value="Potential | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(0)}"></h:outputText>
-				</h:column>
-				<h:column id="column3">
-					<f:facet name="header">
-						<h:outputText value="Consumption | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(1)}"></h:outputText>
-				</h:column>
-				<h:column id="column4">
-					<f:facet name="header">
-						<h:outputText value="Ratio"></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(2)}"></h:outputText>
-				</h:column>
-			</h:dataTable>
-		</h:form>
+        <f:view>
+            <h:form>
+                <h1>Ingredient doser analysis</h1>
+                <h3>Query filters</h3>
+                <p>CLUSTER: #{customerSetBean.selectedCluster}</p>
+                <p>MARKET GROUP: #{customerSetBean.selectedMarketGroup}</p>
+                <p>MARKET: #{customerSetBean.selectedMarket}</p>
+                <p>CUSTOMER GROUP: #{customerSetBean.selectedCustGroup}</p>
+                <p>CUSTOMER NUMBERS: #{customerSetBean.selectedIDsString} </p>                       
+                <p>#{customerSetBean.selectedIDsString=="ALL CUSTOMER NUMBERS"? '' : 'CUSTOMER NAMES:'}
+                    #{customerSetBean.selectedIDsString=="ALL CUSTOMER NUMBERS"? '' : customerSetBean.selectedCustNamesString}</p>
 
-		<h:form>
-			<p></p>
-			<h2>Hopper</h2>
-			<p></p>
-			<h:graphicImage url="#{resource['images:hopper_doser.png']}"
-				alt="Ingredient doser hopper kits pic" />
-			<p></p>
-			<h:dataTable border="0"
-				value="#{ingredientDoserBean.hopperFamilyMap.entrySet().toArray()}"
-				var="map">
-				<h:column id="column1">
-					<f:facet name="header">
-						<h:outputText value="Spare part family | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.key}"></h:outputText>
-				</h:column>
-				<h:column id="column2">
-					<f:facet name="header">
-						<h:outputText value="Potential | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(0)}"></h:outputText>
-				</h:column>
-				<h:column id="column3">
-					<f:facet name="header">
-						<h:outputText value="Consumption | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(1)}"></h:outputText>
-				</h:column>
-				<h:column id="column4">
-					<f:facet name="header">
-						<h:outputText value="Ratio"></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(2)}"></h:outputText>
-				</h:column>
-			</h:dataTable>
-		</h:form>
+                <p></p>
+                <h:graphicImage url="#{resource['images:doser.jpg']}"
+                                alt="Ingredient doser pic" />
+            </h:form>
 
+            <h:form>
+                <p></p>
+                <h2>Service kits</h2>
+                <p></p>
+                <h:graphicImage url="#{resource['images:service_kits_doser.png']}"
+                                alt="Ingredient doser service kits pic" />
+                <p></p>
+                <h:dataTable border="0"
+                             value="#{ingredientDoserBean.serviceKitsFamilyMap.entrySet().toArray()}"
+                             var="map">
+                    <h:column id="column1">
+                        <f:facet name="header">
+                            <h:outputText value="Spare part family    | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.key}"></h:outputText>
+                    </h:column>
+                    <h:column id="column2">
+                        <f:facet name="header">
+                            <h:outputText value="Potential | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(0)}"></h:outputText>
+                    </h:column>
+                    <h:column id="column3">
+                        <f:facet name="header">
+                            <h:outputText value="Consumption | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(1)}"></h:outputText>
+                    </h:column>
+                    <h:column id="column4">
+                        <f:facet name="header">
+                            <h:outputText value="Ratio"></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(2)}"></h:outputText>
+                    </h:column>
+                </h:dataTable>
+            </h:form>
 
-		<h:form>
-			<p></p>
-			<h2>Mixer</h2>
-			<p></p>
-			<h:graphicImage url="#{resource['images:mixer_doser.png']}"
-				alt="Ingredient doser mixer pic" />
-			<p></p>
-			<h:dataTable border="0"
-				value="#{ingredientDoserBean.mixerFamilyMap.entrySet().toArray()}"
-				var="map">
-				<h:column id="column1">
-					<f:facet name="header">
-						<h:outputText value="Spare part family | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.key}"></h:outputText>
-				</h:column>
-				<h:column id="column2">
-					<f:facet name="header">
-						<h:outputText value="Potential | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(0)}"></h:outputText>
-				</h:column>
-				<h:column id="column3">
-					<f:facet name="header">
-						<h:outputText value="Consumption | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(1)}"></h:outputText>
-				</h:column>
-				<h:column id="column4">
-					<f:facet name="header">
-						<h:outputText value="Ratio"></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(2)}"></h:outputText>
-				</h:column>
-			</h:dataTable>
-		</h:form>
+            <h:form>
+                <p></p>
+                <h2>Hopper</h2>
+                <p></p>
+                <h:graphicImage url="#{resource['images:hopper_doser.png']}"
+                                alt="Ingredient doser hopper kits pic" />
+                <p></p>
+                <h:dataTable border="0"
+                             value="#{ingredientDoserBean.hopperFamilyMap.entrySet().toArray()}"
+                             var="map">
+                    <h:column id="column1">
+                        <f:facet name="header">
+                            <h:outputText value="Spare part family | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.key}"></h:outputText>
+                    </h:column>
+                    <h:column id="column2">
+                        <f:facet name="header">
+                            <h:outputText value="Potential | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(0)}"></h:outputText>
+                    </h:column>
+                    <h:column id="column3">
+                        <f:facet name="header">
+                            <h:outputText value="Consumption | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(1)}"></h:outputText>
+                    </h:column>
+                    <h:column id="column4">
+                        <f:facet name="header">
+                            <h:outputText value="Ratio"></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(2)}"></h:outputText>
+                    </h:column>
+                </h:dataTable>
+            </h:form>
 
 
-		<h:form>
-			<p></p>
-			<h2>Pump</h2>
-			<p></p>
-			<h:graphicImage url="#{resource['images:pump_doser.png']}"
-				alt="Ingredient doser pump pic" />
-			<p></p>
-			<h:dataTable border="0"
-				value="#{ingredientDoserBean.pumpFamilyMap.entrySet().toArray()}"
-				var="map">
-				<h:column id="column1">
-					<f:facet name="header">
-						<h:outputText value="Spare part family | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.key}"></h:outputText>
-				</h:column>
-				<h:column id="column2">
-					<f:facet name="header">
-						<h:outputText value="Potential | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(0)}"></h:outputText>
-				</h:column>
-				<h:column id="column3">
-					<f:facet name="header">
-						<h:outputText value="Consumption | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(1)}"></h:outputText>
-				</h:column>
-				<h:column id="column4">
-					<f:facet name="header">
-						<h:outputText value="Ratio"></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(2)}"></h:outputText>
-				</h:column>
-			</h:dataTable>
-		</h:form>
+            <h:form>
+                <p></p>
+                <h2>Mixer</h2>
+                <p></p>
+                <h:graphicImage url="#{resource['images:mixer_doser.png']}"
+                                alt="Ingredient doser mixer pic" />
+                <p></p>
+                <h:dataTable border="0"
+                             value="#{ingredientDoserBean.mixerFamilyMap.entrySet().toArray()}"
+                             var="map">
+                    <h:column id="column1">
+                        <f:facet name="header">
+                            <h:outputText value="Spare part family | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.key}"></h:outputText>
+                    </h:column>
+                    <h:column id="column2">
+                        <f:facet name="header">
+                            <h:outputText value="Potential | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(0)}"></h:outputText>
+                    </h:column>
+                    <h:column id="column3">
+                        <f:facet name="header">
+                            <h:outputText value="Consumption | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(1)}"></h:outputText>
+                    </h:column>
+                    <h:column id="column4">
+                        <f:facet name="header">
+                            <h:outputText value="Ratio"></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(2)}"></h:outputText>
+                    </h:column>
+                </h:dataTable>
+            </h:form>
 
 
-		<h:form>
-			<p></p>
-			<h2>Cover</h2>
-			<p></p>
-			<h:graphicImage url="#{resource['images:cover_doser.png']}"
-				alt="Ingredient doser cover pic" />
-			<p></p>
-			<h:dataTable border="0"
-				value="#{ingredientDoserBean.coverFamilyMap.entrySet().toArray()}"
-				var="map">
-				<h:column id="column1">
-					<f:facet name="header">
-						<h:outputText value="Spare part family | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.key}"></h:outputText>
-				</h:column>
-				<h:column id="column2">
-					<f:facet name="header">
-						<h:outputText value="Potential | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(0)}"></h:outputText>
-				</h:column>
-				<h:column id="column3">
-					<f:facet name="header">
-						<h:outputText value="Consumption | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(1)}"></h:outputText>
-				</h:column>
-				<h:column id="column4">
-					<f:facet name="header">
-						<h:outputText value="Ratio"></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(2)}"></h:outputText>
-				</h:column>
-			</h:dataTable>
-		</h:form>
+            <h:form>
+                <p></p>
+                <h2>Pump</h2>
+                <p></p>
+                <h:graphicImage url="#{resource['images:pump_doser.png']}"
+                                alt="Ingredient doser pump pic" />
+                <p></p>
+                <h:dataTable border="0"
+                             value="#{ingredientDoserBean.pumpFamilyMap.entrySet().toArray()}"
+                             var="map">
+                    <h:column id="column1">
+                        <f:facet name="header">
+                            <h:outputText value="Spare part family | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.key}"></h:outputText>
+                    </h:column>
+                    <h:column id="column2">
+                        <f:facet name="header">
+                            <h:outputText value="Potential | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(0)}"></h:outputText>
+                    </h:column>
+                    <h:column id="column3">
+                        <f:facet name="header">
+                            <h:outputText value="Consumption | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(1)}"></h:outputText>
+                    </h:column>
+                    <h:column id="column4">
+                        <f:facet name="header">
+                            <h:outputText value="Ratio"></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(2)}"></h:outputText>
+                    </h:column>
+                </h:dataTable>
+            </h:form>
 
 
-		<h:form>
-			<p></p>
-			<h2>Agitator</h2>
-			<p></p>
-			<h:graphicImage url="#{resource['images:agitator_doser.png']}"
-				alt="Ingredient doser agitator pic" />
-			<p></p>
-			<h:dataTable border="0"
-				value="#{ingredientDoserBean.agitatorFamilyMap.entrySet().toArray()}"
-				var="map">
-				<h:column id="column1">
-					<f:facet name="header">
-						<h:outputText value="Spare part family | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.key}"></h:outputText>
-				</h:column>
-				<h:column id="column2">
-					<f:facet name="header">
-						<h:outputText value="Potential | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(0)}"></h:outputText>
-				</h:column>
-				<h:column id="column3">
-					<f:facet name="header">
-						<h:outputText value="Consumption | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(1)}"></h:outputText>
-				</h:column>
-				<h:column id="column4">
-					<f:facet name="header">
-						<h:outputText value="Ratio"></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(2)}"></h:outputText>
-				</h:column>
-			</h:dataTable>
-		</h:form>
+            <h:form>
+                <p></p>
+                <h2>Cover</h2>
+                <p></p>
+                <h:graphicImage url="#{resource['images:cover_doser.png']}"
+                                alt="Ingredient doser cover pic" />
+                <p></p>
+                <h:dataTable border="0"
+                             value="#{ingredientDoserBean.coverFamilyMap.entrySet().toArray()}"
+                             var="map">
+                    <h:column id="column1">
+                        <f:facet name="header">
+                            <h:outputText value="Spare part family | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.key}"></h:outputText>
+                    </h:column>
+                    <h:column id="column2">
+                        <f:facet name="header">
+                            <h:outputText value="Potential | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(0)}"></h:outputText>
+                    </h:column>
+                    <h:column id="column3">
+                        <f:facet name="header">
+                            <h:outputText value="Consumption | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(1)}"></h:outputText>
+                    </h:column>
+                    <h:column id="column4">
+                        <f:facet name="header">
+                            <h:outputText value="Ratio"></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(2)}"></h:outputText>
+                    </h:column>
+                </h:dataTable>
+            </h:form>
 
 
-		<h:form>
-			<p></p>
-			<h2>Single parts</h2>
-			<p></p>
-			<h:graphicImage url="#{resource['images:singleParts_doser.png']}"
-				alt="Ingredient doser single parts pic" />
-			<p></p>
-			<h:dataTable border="0"
-				value="#{ingredientDoserBean.singlePartsFamilyMap.entrySet().toArray()}"
-				var="map">
-				<h:column id="column1">
-					<f:facet name="header">
-						<h:outputText value="Spare part family | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.key}"></h:outputText>
-				</h:column>
-				<h:column id="column2">
-					<f:facet name="header">
-						<h:outputText value="Potential | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(0)}"></h:outputText>
-				</h:column>
-				<h:column id="column3">
-					<f:facet name="header">
-						<h:outputText value="Consumption | "></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(1)}"></h:outputText>
-				</h:column>
-				<h:column id="column4">
-					<f:facet name="header">
-						<h:outputText value="Ratio"></h:outputText>
-					</f:facet>
-					<h:outputText value="#{map.value.get(2)}"></h:outputText>
-				</h:column>
-			</h:dataTable>
-		</h:form>
+            <h:form>
+                <p></p>
+                <h2>Agitator</h2>
+                <p></p>
+                <h:graphicImage url="#{resource['images:agitator_doser.png']}"
+                                alt="Ingredient doser agitator pic" />
+                <p></p>
+                <h:dataTable border="0"
+                             value="#{ingredientDoserBean.agitatorFamilyMap.entrySet().toArray()}"
+                             var="map">
+                    <h:column id="column1">
+                        <f:facet name="header">
+                            <h:outputText value="Spare part family | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.key}"></h:outputText>
+                    </h:column>
+                    <h:column id="column2">
+                        <f:facet name="header">
+                            <h:outputText value="Potential | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(0)}"></h:outputText>
+                    </h:column>
+                    <h:column id="column3">
+                        <f:facet name="header">
+                            <h:outputText value="Consumption | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(1)}"></h:outputText>
+                    </h:column>
+                    <h:column id="column4">
+                        <f:facet name="header">
+                            <h:outputText value="Ratio"></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(2)}"></h:outputText>
+                    </h:column>
+                </h:dataTable>
+            </h:form>
 
 
-		<p></p>
-		<h2>New selections</h2>
-		<p></p>
+            <h:form>
+                <p></p>
+                <h2>Single parts</h2>
+                <p></p>
+                <h:graphicImage url="#{resource['images:singleParts_doser.png']}"
+                                alt="Ingredient doser single parts pic" />
+                <p></p>
+                <h:dataTable border="0"
+                             value="#{ingredientDoserBean.singlePartsFamilyMap.entrySet().toArray()}"
+                             var="map">
+                    <h:column id="column1">
+                        <f:facet name="header">
+                            <h:outputText value="Spare part family | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.key}"></h:outputText>
+                    </h:column>
+                    <h:column id="column2">
+                        <f:facet name="header">
+                            <h:outputText value="Potential | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(0)}"></h:outputText>
+                    </h:column>
+                    <h:column id="column3">
+                        <f:facet name="header">
+                            <h:outputText value="Consumption | "></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(1)}"></h:outputText>
+                    </h:column>
+                    <h:column id="column4">
+                        <f:facet name="header">
+                            <h:outputText value="Ratio"></h:outputText>
+                        </f:facet>
+                        <h:outputText value="#{map.value.get(2)}"></h:outputText>
+                    </h:column>
+                </h:dataTable>
+            </h:form>
 
-		<h:form>
-			<p></p>
-			<h:commandButton id="newCalculation" value="KeyComponent"
-				action="calculate">
-			</h:commandButton>
-		</h:form>
 
-		<h:form>
-			<p></p>
-			<h:commandButton id="newCustomer" value="Customer" action="index">
-			</h:commandButton>
-		</h:form>
+            <p></p>
+            <h2>New selections</h2>
+            <p></p>
 
-	</f:view>
-</h:body>
+            <h:form>
+                <h:panelGrid columns="1" cellpadding="5"> 
+                    <p:button id="newCalculation" 
+                              value="KeyComponent"
+                              outcome="calculate"
+                              style="width:150px"
+                              icon="ui-icon-star">
+                    </p:button>
+
+                    <p:button id="newCustomer" 
+                              value="Customer" 
+                              outcome="index"
+                              style="width:150px"
+                              icon="ui-icon-star">
+                    </p:button>
+                </h:panelGrid>
+            </h:form>
+
+        </f:view>
+    </h:body>
 </html>
