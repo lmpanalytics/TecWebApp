@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -21,6 +22,8 @@ import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
 import org.neo4j.driver.v1.exceptions.ClientException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author SEPALMM
@@ -63,8 +66,16 @@ public class CustomerSetBean implements Serializable {
 	private String selectedMarketGroup = "";
 	private String selectedMarket = "";
 	private String selectedCustGroup = "";
-	private String selectedCustNumber = "";
-	private String selectedCustName = "";
+	private String selectedCustNumber = ""; // DELETE
+	private String selectedCustName = ""; // DELETE
+        
+        private String[] selectedCustomers; // From jsf page, user selections
+        private String[] selectedIDs;
+        private String[] selectedCustNames;
+        private String selectedIDsString;
+        private String selectedCustNamesString;
+        
+        private static final Logger LOGGER = LoggerFactory.getLogger(CustomerSetBean.class);
 
 	private boolean isCentralTeamUser;
 	private boolean isTPPC_User;
@@ -98,7 +109,7 @@ public class CustomerSetBean implements Serializable {
 		custGroupSet.add("ALL CUSTOMER GROUPS");
 		// custNumberSet.add("ALL CUSTOMER NUMBERS");
 		custNumberMap.put("ALL CUSTOMER NUMBERS", "ALL CUSTOMER NUMBERS");
-
+                
 		// Initiate user group classifiers
 		isCentralTeamUser();
 		isTPPC_User();
@@ -404,67 +415,6 @@ public class CustomerSetBean implements Serializable {
 
 	}
 
-	/**
-	 * Make collection of all customer numbers
-	 * 
-	 * @return the custNumberSet
-	 */
-	/*
-	 * public Set<String> queryCustNumberSet() { printSelectedCustGroup();
-	 * custNumberSet.clear(); custNumberSet.add("ALL CUSTOMER NUMBERS");
-	 * 
-	 * // code query here try (Session session =
-	 * NeoDbProvider.getDriver().session()) {
-	 * 
-	 * // Run single statements one-by-one, OR... String tx; if
-	 * (getSelectedCustGroup() == null || (getSelectedCluster().equals(
-	 * "ALL CLUSTERS") && getSelectedMarketGroup().equals("ALL MARKET GROUPS")
-	 * && getSelectedCustGroup().equals("ALL CUSTOMER GROUPS"))) { tx =
-	 * "MATCH (e:Entity) RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID"
-	 * ; }else if(getSelectedMarketGroup().equals("ALL MARKET GROUPS") &&
-	 * getSelectedCustGroup().equals("ALL CUSTOMER GROUPS")){ tx =
-	 * "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(:Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE cl.id = '"
-	 * + getSelectedCluster() +
-	 * "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID"
-	 * ; }else if(getSelectedCluster().equals("ALL CLUSTERS") &&
-	 * getSelectedMarketGroup().equals("ALL MARKET GROUPS")){ tx =
-	 * "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(:Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE cg.name = '"
-	 * + getSelectedCustGroup() +
-	 * "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID"
-	 * ; }else if(getSelectedMarketGroup().equals("ALL MARKET GROUPS")){ tx =
-	 * "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(:Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE cl.id = '"
-	 * + getSelectedCluster() + "' AND cg.name = '" + getSelectedCustGroup() +
-	 * "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID"
-	 * ; }else if(getSelectedCustGroup().equals("ALL CUSTOMER GROUPS")){ tx =
-	 * "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(:Market)-[:IN]->(mg: MarketGrp)-[:IN]->(cl: Cluster) WHERE mg.name = '"
-	 * + getSelectedMarketGroup() +
-	 * "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID"
-	 * ; } else { tx =
-	 * "MATCH (cg: CustGrp)<-[:IN]-(e: Entity)-[:LINKED]->(:Market)-[:IN]->(mg: MarketGrp) WHERE cg.name = '"
-	 * + getSelectedCustGroup() + "' AND mg.name = '" + getSelectedMarketGroup()
-	 * +
-	 * "' RETURN distinct e.id AS ID, e.name AS name, (e.id + \" (\" + e.name + \")\") AS compositeKey ORDER BY ID"
-	 * ; } System.out.format("queryCustNumberSet, tx query text is: %s", tx);
-	 * StatementResult result = session.run(tx);
-	 * 
-	 * while (result.hasNext()) { Record r = result.next(); String key =
-	 * r.get("ID").asString(); String name = r.get("name").asString(); // String
-	 * compositeKey = r.get("compositeKey").asString(); custNumberSet.add(key);
-	 * 
-	 * }
-	 * 
-	 * System.out.printf("%s > Queried Customer number set.\n",
-	 * LocalDateTime.now()); System.out.printf("Size of custNumberSet is %s.\n",
-	 * custNumberSet.size()); } catch (ClientException e) { System.err.println(
-	 * "Exception in 'getCustNumberSet()':" + e); } finally {
-	 * neoDbProvider.closeNeo4jDriver(); // System.out.printf(
-	 * "size of CustNumberSet is %s::\n", // custNumberSet.size());
-	 * 
-	 * }
-	 * 
-	 * return custNumberSet; }
-	 */
-
 	public Map<String, String> queryCustNumberMap() {
 		printSelectedCustGroup();
 		custNumberMap.clear();
@@ -659,22 +609,6 @@ public class CustomerSetBean implements Serializable {
 	}
 
 	/**
-	 * @return the custNumberSet
-	 */
-	/*
-	 * public Set<String> getCustNumberSet() { return custNumberSet; }
-	 */
-
-	/**
-	 * @param custNumberSet
-	 *            the custNumberSet to set
-	 */
-	/*
-	 * public void setCustNumberSet(Set<String> custNumberSet) {
-	 * this.custNumberSet = custNumberSet; }
-	 */
-
-	/**
 	 * @return the custNumberMap
 	 */
 	public Map<String, String> getCustNumberMap() {
@@ -767,7 +701,7 @@ public class CustomerSetBean implements Serializable {
 	/**
 	 * @return the selectedCustNumber
 	 */
-	public String getSelectedCustNumber() {
+	 public String getSelectedCustNumber() {
 		String customerNumber;
 
 		if (this.selectedCustNumber.equals("ALL CUSTOMER NUMBERS")) {
@@ -777,16 +711,120 @@ public class CustomerSetBean implements Serializable {
 			customerNumber = this.selectedCustNumber.replaceAll("[^0-9]", "");
 		}
 		return customerNumber;
-	}
+	} 
 
 	/**
 	 * @param selectedCustNumber
 	 *            the selectedCustNumber to set
 	 */
-	public void setSelectedCustNumber(String selectedCustNumber) {
+	 public void setSelectedCustNumber(String selectedCustNumber) {
 		this.selectedCustNumber = selectedCustNumber;
 	}
+        
+    /**
+     * Collect IDs of selected customers to string array to be used in a Cypher
+     * statement. Called by user from jsf.
+     */
+    public void collectSelectedCustomers() {
+        try {
+            String custKey = "";
+            boolean foundACN = false;
+            int numberOfSelectedCustomers = selectedCustomers.length;
+            selectedIDs = new String[numberOfSelectedCustomers];
+            selectedCustNames = new String[numberOfSelectedCustomers];
+            if (numberOfSelectedCustomers > 0) {
 
+                // break loop if user selects combination containing 
+                // "ALL CUSTOMER NUMBERS"
+                for (int i = 0; i < selectedCustomers.length; i++) {
+                    custKey = selectedCustomers[i];
+                    if (custKey.equals("ALL CUSTOMER NUMBERS")) {
+                        // Prepare to break the loop :)
+                        selectedIDs = new String[1];
+                        selectedIDs[0] = custKey;
+                        selectedCustNames = new String[1];
+                        selectedCustNames[0] = custKey;
+                        foundACN = true;
+                        break;
+                    } else if (!foundACN) {
+                        // Add user selections to array
+//                      String id = custNumberMap.get(selectedCustomers[i]);
+                        custKey = selectedCustomers[i];
+                        LOGGER.info("Selected customer: {}", custKey);
+                        // Remove all letters from composite key, 
+                        // and keep the customer numbers
+                        selectedIDs[i] = custKey.replaceAll("[^0-9]", "");
+                        selectedCustNames[i] = custKey.replaceAll("[0-9]", "");
+                    }
+                }
+
+                // Join strings from arrays for jsf output text
+                StringJoiner sj1 = new StringJoiner(", ", "[", "]");
+                for (String id : selectedIDs) {
+                    sj1.add(id.trim());
+                }
+                if (sj1.toString().length() > 100) {
+                    selectedIDsString = sj1.toString().substring(0, 101).concat("...");
+                } else {
+                    selectedIDsString = sj1.toString();
+                }
+                
+
+                StringJoiner sj2 = new StringJoiner(",", "[", "]");
+                for (String id : selectedCustNames) {
+                    sj2.add(id.replaceAll("\\s*\\(", "").replaceAll("\\)", ""));
+                }
+                if (sj2.toString().length() > 100) {
+                    selectedCustNamesString = sj2.toString().substring(0, 101).concat("...");
+                } else {
+                    selectedCustNamesString = sj2.toString();
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Could not collect CustomerIDs to text array. "
+                    + "Error message: {}", e.getMessage());
+        }
+
+    }
+              
+    public String[] getSelectedCustomers() {
+        return selectedCustomers;
+    }
+
+    public void setSelectedCustomers(String[] selectedCustomers) {
+        this.selectedCustomers = selectedCustomers;
+    }
+
+    /**
+     * 
+     * @return selected customer IDs (customer numbers)
+     */
+    public String[] getSelectedIDs() {
+        return selectedIDs;
+    }
+
+    public void setSelectedIDs(String[] selectedIDs) {
+        this.selectedIDs = selectedIDs;
+    }
+
+    public String getSelectedIDsString() {
+        return selectedIDsString;
+    }
+
+    public void setSelectedIDsString(String selectedIDsString) {
+        this.selectedIDsString = selectedIDsString;
+    }
+
+    public String getSelectedCustNamesString() {
+        return selectedCustNamesString;
+    }
+
+    public void setSelectedCustNamesString(String selectedCustNamesString) {
+        this.selectedCustNamesString = selectedCustNamesString;
+    }
+    
+    
+        
 	/**
 	 * @return the selectedCustName
 	 */

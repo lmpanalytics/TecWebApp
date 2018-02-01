@@ -14,7 +14,7 @@
             <h:form>
                 <h1>Market and Customer Selections</h1>
                 <h3>Select Cluster, Market group, Market, Customer group and Final
-                    customer number</h3>
+                    customer numbers</h3>
                 <p></p>
             </h:form>
 
@@ -23,7 +23,7 @@
                     <p:selectOneMenu id="clusterSet" 
                                      title="Clusters" 
                                      required="true" 
-                                     style="width:250px" 
+                                     style="width:255px" 
                                      value="#{customerSetBean.selectedCluster}"			
                                      requiredMessage="Select a cluster">
                         <f:selectItem itemLabel="Choose cluster .." itemValue="#{null}" />
@@ -41,7 +41,7 @@
                     <p:selectOneMenu id="marketGroupSet" 
                                      title="Market groups"
                                      required="true" 
-                                     style="width:250px" 
+                                     style="width:255px" 
                                      value="#{customerSetBean.selectedMarketGroup}"
                                      requiredMessage="Select a market group">
                         <f:selectItem itemLabel="Choose market group .." itemValue="#{null}" />
@@ -59,7 +59,7 @@
                     <p:selectOneMenu id="marketSet" 
                                      title="Markets"
                                      required="true" 
-                                     style="width:250px" 
+                                     style="width:255px" 
                                      value="#{customerSetBean.selectedMarket}"
                                      requiredMessage="Select a market">
                         <f:selectItem itemLabel="Choose market .." itemValue="#{null}" />
@@ -77,7 +77,7 @@
                     <p:selectOneMenu id="customerGroupSet" 
                                      title="Customer group"
                                      required="true" 
-                                     style="width:250px" 
+                                     style="width:255px" 
                                      value="#{customerSetBean.selectedCustGroup}"
                                      requiredMessage="Select a customer group">
                         <f:selectItem itemLabel="Choose customer group .."
@@ -93,19 +93,17 @@
 
             <h:form>
                 <h:panelGrid columns="2" cellpadding="5"> 
-                    <p:selectOneMenu id="customerNumberSet" 
-                                     title="Final customer number"
-                                     required="true" 
-                                     style="width:250px" 
-                                     value="#{customerSetBean.selectedCustNumber}"
-                                     requiredMessage="Select a customer number">				
-                        <f:selectItem itemLabel="Choose customer number .."
-                                      itemValue="#{null}" />
-                        <f:selectItems 	value="#{customerSetBean.custNumberMap.keySet()}" />
-                    </p:selectOneMenu>
+                    <p:selectCheckboxMenu id="customerNumberSet" 
+                                          value="#{customerSetBean.selectedCustomers}"
+                                          label="Customers"
+                                          filter="true" filterMatchMode="contains" 
+                                          panelStyle="width:250px">				
 
-                    <h:commandButton id="queryCustNo" value="Apply and Query Customer number"
-                                     onclick="#{customerSetBean.selectedCustNumber}"
+                        <f:selectItems 	value="#{customerSetBean.custNumberMap.keySet()}" />
+                    </p:selectCheckboxMenu>
+
+                    <h:commandButton id="queryCustNo" value="Apply and Query Customer numbers"
+                                     actionListener="#{customerSetBean.collectSelectedCustomers}"
                                      action="calculate">
                     </h:commandButton>
                 </h:panelGrid>

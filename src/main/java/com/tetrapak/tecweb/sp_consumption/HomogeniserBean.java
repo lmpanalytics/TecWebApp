@@ -21,6 +21,7 @@ import javax.inject.Named;
 import org.neo4j.driver.v1.Record;
 import org.neo4j.driver.v1.Session;
 import org.neo4j.driver.v1.StatementResult;
+import org.neo4j.driver.v1.Values;
 import org.neo4j.driver.v1.exceptions.ClientException;
 
 /**
@@ -54,7 +55,7 @@ public class HomogeniserBean implements Serializable {
 	private String marketGroup;
 	private String market;
 	private String customerGroup;
-	private String customerNumber;
+        private String[] customerNumbers;
 
 	private String clientSelectionConstraints;
 
@@ -93,7 +94,7 @@ public class HomogeniserBean implements Serializable {
 		marketGroup = customerSetBean.getSelectedMarketGroup();
 		market = customerSetBean.getSelectedMarket();
 		customerGroup = customerSetBean.getSelectedCustGroup();
-		customerNumber = customerSetBean.getSelectedCustNumber();
+                customerNumbers = customerSetBean.getSelectedIDs();
 
 		makeClientSelectionConstraints();
 
@@ -143,43 +144,50 @@ public class HomogeniserBean implements Serializable {
 	 * "c.id = 'E&CA' AND mg.name = 'NORDICS' AND cg.name = 'FALKOPING MEJERI'
 	 * AND e.id = '0000018140' AND "
 	 */
-	private void makeClientSelectionConstraints() {
-		String txCluster;
-		String txMarketGroup;
-		String txMarket;
-		String txCustomerGroup;
-		String txCustomerNumber;
+	   private void makeClientSelectionConstraints() {
+        String txCluster;
+        String txMarketGroup;
+        String txMarket;
+        String txCustomerGroup;
+        String txCustomerNumbers;
+        boolean isAllCustNumbers = false;
 
-		if (cluster.equals("ALL CLUSTERS")) {
-			txCluster = "";
-		} else {
-			txCluster = "c.id = '" + cluster + "' AND ";
-		}
-		if (marketGroup.equals("ALL MARKET GROUPS")) {
-			txMarketGroup = "";
-		} else {
-			txMarketGroup = "mg.name = '" + marketGroup + "' AND ";
-		}
-		if (market.equals("ALL MARKETS")) {
-			txMarket = "";
-		} else {
-			txMarket = "m.name = '" + market + "' AND ";
-		}
-		if (customerGroup.equals("ALL CUSTOMER GROUPS")) {
-			txCustomerGroup = "";
-		} else {
-			txCustomerGroup = "cg.name = '" + customerGroup + "' AND ";
-		}
-		if (customerNumber.equals("ALL CUSTOMER NUMBERS")) {
-			txCustomerNumber = "";
-		} else {
-			txCustomerNumber = "e.id = '" + customerNumber + "' AND ";
-		}
-		clientSelectionConstraints = txCluster + txMarketGroup + txMarket + txCustomerGroup + txCustomerNumber;
-		// System.out.format("****************** THIS IS THE
-		// clientSelectionConstraints *******************\n%s\n ",
-		// clientSelectionConstraints);
-	}
+        for (String id : customerNumbers) {
+            if (id.equals("ALL CUSTOMER NUMBERS")) {
+                isAllCustNumbers = true;
+                break;
+            }
+        }
+
+        if (cluster.equals("ALL CLUSTERS")) {
+            txCluster = "";
+        } else {
+            txCluster = "c.id = $cluster AND ";
+        }
+        if (marketGroup.equals("ALL MARKET GROUPS")) {
+            txMarketGroup = "";
+        } else {
+            txMarketGroup = "mg.name = $marketGroup AND ";
+        }
+        if (market.equals("ALL MARKETS")) {
+            txMarket = "";
+        } else {
+            txMarket = "m.name = $market AND ";
+        }
+        if (customerGroup.equals("ALL CUSTOMER GROUPS")) {
+            txCustomerGroup = "";
+        } else {
+            txCustomerGroup = "cg.name = $customerGroup AND ";
+        }
+        if (isAllCustNumbers) {
+            txCustomerNumbers = "";
+        } else {
+            txCustomerNumbers = "e.id IN $customerNumbers AND ";
+        }
+        clientSelectionConstraints = txCluster + txMarketGroup + txMarket + txCustomerGroup + txCustomerNumbers;
+//		 System.out.format("****************** THIS IS THE clientSelectionConstraints *******************\n%s\n ",
+//		 clientSelectionConstraints);
+    }
 
 	/**
 	 * Constructs the Cypher query transaction text used in calculating the
@@ -220,928 +228,1060 @@ public class HomogeniserBean implements Serializable {
 	/**
 	 * @return the pistonFamilyMap
 	 */
-	public Map<String, List<Double>> getPistonFamilyMap() {
+	   public Map<String, List<Double>> getPistonFamilyMap() {
 
-		// System.out.println("I'm in the getPistonFamilyMap");
+        // System.out.println("I'm in the getPistonFamilyMap");
 
-		// code query here
-		try (Session session = NeoDbProvider.getDriver().session()) {
-			// Aggregate Piston consumption grouped per customer group
-			List<Double> valueList = new ArrayList<>();
+        // code query here
+        try (Session session = NeoDbProvider.getDriver().session()) {
+            // Aggregate Piston consumption grouped per customer group
+            List<Double> valueList = new ArrayList<>();
 
-			String tx = makeFamilyMapQueryStatement("HOM_PISTON");
+            String tx = makeFamilyMapQueryStatement("HOM_PISTON");
 
-			StatementResult result = session.run(tx);
+            StatementResult result = session.run(tx, Values.parameters(
+                    "cluster", cluster,
+                    "marketGroup", marketGroup,
+                    "market", market,
+                    "customerGroup", customerGroup,
+                    "customerNumbers", customerNumbers
+            ));
 
-			while (result.hasNext()) {
-				Record r = result.next();
+            while (result.hasNext()) {
+                Record r = result.next();
 
-				// Add the calculated potential to the value list
-				double tempPotential = getPistonPotential();
-				valueList.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				/*
+                // Add the calculated potential to the value list
+                double tempPotential = getPistonPotential();
+                valueList.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+                        .doubleValue());
+                /*
 				 * Add total consumption divided by 3 (to get annual consumption
 				 * from 36 months sales history) to the value list
-				 */
-				double total = r.get("TotalQty").asDouble() / 3d;
+                 */
+                double total = r.get("TotalQty").asDouble() / 3d;
 
-				valueList
-						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				double ratio = 0d;
-				// Calculate the consumption ratio (consumed/potential), and
-				// handle division by zero exception
-				if (valueList.get(0) != 0d) {
-					ratio = total / tempPotential;
-				}
-				valueList
-						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				pistonFamilyMap.replace("Piston", valueList);
+                valueList
+                        .add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                double ratio = 0d;
+                // Calculate the consumption ratio (consumed/potential), and
+                // handle division by zero exception
+                if (valueList.get(0) != 0d) {
+                    ratio = total / tempPotential;
+                }
+                valueList
+                        .add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                pistonFamilyMap.replace("Piston", valueList);
 
-			}
+            }
 
-			// *****************************************************************************************************
+            // *****************************************************************************************************
 
-			// Aggregate Piston seal consumption grouped per customer group
-			List<Double> valueList1 = new ArrayList<>();
+            // Aggregate Piston seal consumption grouped per customer group
+            List<Double> valueList1 = new ArrayList<>();
 
-			String tx1 = makeFamilyMapQueryStatement("HOM_PISTON SEAL");
+            String tx1 = makeFamilyMapQueryStatement("HOM_PISTON SEAL");
 
-			StatementResult result1 = session.run(tx1);
+            StatementResult result1 = session.run(tx1, Values.parameters(
+                    "cluster", cluster,
+                    "marketGroup", marketGroup,
+                    "market", market,
+                    "customerGroup", customerGroup,
+                    "customerNumbers", customerNumbers
+            ));
 
-			while (result1.hasNext()) {
-				Record r = result1.next();
+            while (result1.hasNext()) {
+                Record r = result1.next();
 
-				// Add the calculated potential to the value list
-				double tempPotential = getPistonSealPotential();
-				valueList1.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				/*
+                // Add the calculated potential to the value list
+                double tempPotential = getPistonSealPotential();
+                valueList1.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+                        .doubleValue());
+                /*
 				 * Add total consumption divided by 3 (to get annual consumption
 				 * from 36 months sales history) to the value list
-				 */
-				double total = r.get("TotalQty").asDouble() / 3d;
+                 */
+                double total = r.get("TotalQty").asDouble() / 3d;
 
-				valueList1
-						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				double ratio = 0d;
-				// Calculate the consumption ratio (consumed/potential), and
-				// handle division by zero exception
-				if (valueList1.get(0) != 0d) {
-					ratio = total / tempPotential;
-				}
-				valueList1
-						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				pistonFamilyMap.replace("Piston seal", valueList1);
+                valueList1
+                        .add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                double ratio = 0d;
+                // Calculate the consumption ratio (consumed/potential), and
+                // handle division by zero exception
+                if (valueList1.get(0) != 0d) {
+                    ratio = total / tempPotential;
+                }
+                valueList1
+                        .add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                pistonFamilyMap.replace("Piston seal", valueList1);
 
-			}
+            }
 
-			// *****************************************************************************************************
+            // *****************************************************************************************************
 
-			// Aggregate Compression ring consumption grouped per customer group
-			List<Double> valueList2 = new ArrayList<>();
+            // Aggregate Compression ring consumption grouped per customer group
+            List<Double> valueList2 = new ArrayList<>();
 
-			String tx2 = makeFamilyMapQueryStatement("HOM_COMPRESSION RING");
+            String tx2 = makeFamilyMapQueryStatement("HOM_COMPRESSION RING");
 
-			StatementResult result2 = session.run(tx2);
+            StatementResult result2 = session.run(tx2, Values.parameters(
+                    "cluster", cluster,
+                    "marketGroup", marketGroup,
+                    "market", market,
+                    "customerGroup", customerGroup,
+                    "customerNumbers", customerNumbers
+            ));
 
-			while (result2.hasNext()) {
-				Record r = result2.next();
+            while (result2.hasNext()) {
+                Record r = result2.next();
 
-				// Add the calculated potential to the value list
-				double tempPotential = getCompressionRingPotential();
-				valueList2.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				/*
+                // Add the calculated potential to the value list
+                double tempPotential = getCompressionRingPotential();
+                valueList2.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+                        .doubleValue());
+                /*
 				 * Add total consumption divided by 3 (to get annual consumption
 				 * from 36 months sales history) to the value list
-				 */
-				double total = r.get("TotalQty").asDouble() / 3d;
+                 */
+                double total = r.get("TotalQty").asDouble() / 3d;
 
-				valueList2
-						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				double ratio = 0d;
-				// Calculate the consumption ratio (consumed/potential), and
-				// handle division by zero exception
-				if (valueList2.get(0) != 0d) {
-					ratio = total / tempPotential;
-				}
-				valueList2
-						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				pistonFamilyMap.replace("Compression ring", valueList2);
+                valueList2
+                        .add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                double ratio = 0d;
+                // Calculate the consumption ratio (consumed/potential), and
+                // handle division by zero exception
+                if (valueList2.get(0) != 0d) {
+                    ratio = total / tempPotential;
+                }
+                valueList2
+                        .add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                pistonFamilyMap.replace("Compression ring", valueList2);
 
-			}
+            }
 
-			// *****************************************************************************************************
+            // *****************************************************************************************************
 
-		} catch (ClientException e) {
-			System.err.println("Exception in 'getPistonFamilyMap()':" + e);
-		} finally {
-			// neoDbProvider.closeNeo4jDriver();
+        } catch (ClientException e) {
+            System.err.println("Exception in 'getPistonFamilyMap()':" + e);
+        } finally {
+            // neoDbProvider.closeNeo4jDriver();
 
-		}
+        }
 
-		return pistonFamilyMap;
-	}
+        return pistonFamilyMap;
+    }
 
 	/**
 	 * @return the homoDeviceFamilyMap
 	 */
-	public Map<String, List<Double>> getHomoDeviceFamilyMap() {
+	   public Map<String, List<Double>> getHomoDeviceFamilyMap() {
 
-		// System.out.println("I'm in the getHomoDeviceFamilyMap");
+        // System.out.println("I'm in the getHomoDeviceFamilyMap");
 
-		// code query here
-		try (Session session = NeoDbProvider.getDriver().session()) {
-			// Aggregate Forcer consumption grouped per customer group
-			List<Double> valueList = new ArrayList<>();
+        // code query here
+        try (Session session = NeoDbProvider.getDriver().session()) {
+            // Aggregate Forcer consumption grouped per customer group
+            List<Double> valueList = new ArrayList<>();
 
-			String tx = makeFamilyMapQueryStatement("HOM_FORCER");
+            String tx = makeFamilyMapQueryStatement("HOM_FORCER");
 
-			StatementResult result = session.run(tx);
+            StatementResult result = session.run(tx, Values.parameters(
+                    "cluster", cluster,
+                    "marketGroup", marketGroup,
+                    "market", market,
+                    "customerGroup", customerGroup,
+                    "customerNumbers", customerNumbers
+            ));
 
-			while (result.hasNext()) {
-				Record r = result.next();
+            while (result.hasNext()) {
+                Record r = result.next();
 
-				// Add the calculated potential to the value list
-				double tempPotential = getForcerPotential();
-				valueList.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				/*
+                // Add the calculated potential to the value list
+                double tempPotential = getForcerPotential();
+                valueList.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+                        .doubleValue());
+                /*
 				 * Add total consumption divided by 3 (to get annual consumption
 				 * from 36 months sales history) to the value list
-				 */
-				double total = r.get("TotalQty").asDouble() / 3d;
+                 */
+                double total = r.get("TotalQty").asDouble() / 3d;
 
-				valueList
-						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				double ratio = 0d;
-				// Calculate the consumption ratio (consumed/potential), and
-				// handle division by zero exception
-				if (valueList.get(0) != 0d) {
-					ratio = total / tempPotential;
-				}
-				valueList
-						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				homoDeviceFamilyMap.replace("Forcer", valueList);
+                valueList
+                        .add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                double ratio = 0d;
+                // Calculate the consumption ratio (consumed/potential), and
+                // handle division by zero exception
+                if (valueList.get(0) != 0d) {
+                    ratio = total / tempPotential;
+                }
+                valueList
+                        .add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                homoDeviceFamilyMap.replace("Forcer", valueList);
 
-			}
+            }
 
-			// *****************************************************************************************************
+            // *****************************************************************************************************
 
-			// Aggregate Impact ring consumption grouped per customer group
-			List<Double> valueList1 = new ArrayList<>();
+            // Aggregate Impact ring consumption grouped per customer group
+            List<Double> valueList1 = new ArrayList<>();
 
-			String tx1 = makeFamilyMapQueryStatement("HOM_IMPACT RING");
+            String tx1 = makeFamilyMapQueryStatement("HOM_IMPACT RING");
 
-			StatementResult result1 = session.run(tx1);
+            StatementResult result1 = session.run(tx1, Values.parameters(
+                    "cluster", cluster,
+                    "marketGroup", marketGroup,
+                    "market", market,
+                    "customerGroup", customerGroup,
+                    "customerNumbers", customerNumbers
+            ));
 
-			while (result1.hasNext()) {
-				Record r = result1.next();
+            while (result1.hasNext()) {
+                Record r = result1.next();
 
-				// Add the calculated potential to the value list
-				double tempPotential = getImpactRingPotential();
-				valueList1.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				/*
+                // Add the calculated potential to the value list
+                double tempPotential = getImpactRingPotential();
+                valueList1.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+                        .doubleValue());
+                /*
 				 * Add total consumption divided by 3 (to get annual consumption
 				 * from 36 months sales history) to the value list
-				 */
-				double total = r.get("TotalQty").asDouble() / 3d;
+                 */
+                double total = r.get("TotalQty").asDouble() / 3d;
 
-				valueList1
-						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				double ratio = 0d;
-				// Calculate the consumption ratio (consumed/potential), and
-				// handle division by zero exception
-				if (valueList1.get(0) != 0d) {
-					ratio = total / tempPotential;
-				}
-				valueList1
-						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				homoDeviceFamilyMap.replace("Impact ring", valueList1);
+                valueList1
+                        .add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                double ratio = 0d;
+                // Calculate the consumption ratio (consumed/potential), and
+                // handle division by zero exception
+                if (valueList1.get(0) != 0d) {
+                    ratio = total / tempPotential;
+                }
+                valueList1
+                        .add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                homoDeviceFamilyMap.replace("Impact ring", valueList1);
 
-			}
+            }
 
-			// *****************************************************************************************************
+            // *****************************************************************************************************
 
-			// Aggregate Seat consumption grouped per customer group
-			List<Double> valueList2 = new ArrayList<>();
+            // Aggregate Seat consumption grouped per customer group
+            List<Double> valueList2 = new ArrayList<>();
 
-			String tx2 = makeFamilyMapQueryStatement("HOM_SEAT");
+            String tx2 = makeFamilyMapQueryStatement("HOM_SEAT");
 
-			StatementResult result2 = session.run(tx2);
+            StatementResult result2 = session.run(tx2, Values.parameters(
+                    "cluster", cluster,
+                    "marketGroup", marketGroup,
+                    "market", market,
+                    "customerGroup", customerGroup,
+                    "customerNumbers", customerNumbers
+            ));
 
-			while (result2.hasNext()) {
-				Record r = result2.next();
+            while (result2.hasNext()) {
+                Record r = result2.next();
 
-				// Add the calculated potential to the value list
-				double tempPotential = getForcerSeatPotential();
-				valueList2.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				/*
+                // Add the calculated potential to the value list
+                double tempPotential = getForcerSeatPotential();
+                valueList2.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+                        .doubleValue());
+                /*
 				 * Add total consumption divided by 3 (to get annual consumption
 				 * from 36 months sales history) to the value list
-				 */
-				double total = r.get("TotalQty").asDouble() / 3d;
+                 */
+                double total = r.get("TotalQty").asDouble() / 3d;
 
-				valueList2
-						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				double ratio = 0d;
-				// Calculate the consumption ratio (consumed/potential), and
-				// handle division by zero exception
-				if (valueList2.get(0) != 0d) {
-					ratio = total / tempPotential;
-				}
-				valueList2
-						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				homoDeviceFamilyMap.replace("Seat", valueList2);
+                valueList2
+                        .add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                double ratio = 0d;
+                // Calculate the consumption ratio (consumed/potential), and
+                // handle division by zero exception
+                if (valueList2.get(0) != 0d) {
+                    ratio = total / tempPotential;
+                }
+                valueList2
+                        .add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                homoDeviceFamilyMap.replace("Seat", valueList2);
 
-			}
+            }
 
-			// *****************************************************************************************************
+            // *****************************************************************************************************
 
-		} catch (ClientException e) {
-			System.err.println("Exception in 'getHomoDeviceFamilyMap()':" + e);
-		} finally {
-			// neoDbProvider.closeNeo4jDriver();
+        } catch (ClientException e) {
+            System.err.println("Exception in 'getHomoDeviceFamilyMap()':" + e);
+        } finally {
+            // neoDbProvider.closeNeo4jDriver();
 
-		}
+        }
 
-		return homoDeviceFamilyMap;
-	}
+        return homoDeviceFamilyMap;
+    }
 
 	/**
 	 * @return the valveFamilyMap
 	 */
-	public Map<String, List<Double>> getValveFamilyMap() {
+	   public Map<String, List<Double>> getValveFamilyMap() {
 
-		// System.out.println("I'm in the getValveFamilyMap");
+        // System.out.println("I'm in the getValveFamilyMap");
 
-		// code query here
-		try (Session session = NeoDbProvider.getDriver().session()) {
-			// Aggregate Valve consumption grouped per customer group
-			List<Double> valueList = new ArrayList<>();
+        // code query here
+        try (Session session = NeoDbProvider.getDriver().session()) {
+            // Aggregate Valve consumption grouped per customer group
+            List<Double> valueList = new ArrayList<>();
 
-			String tx = makeFamilyMapQueryStatement("HOM_VALVE");
+            String tx = makeFamilyMapQueryStatement("HOM_VALVE");
 
-			StatementResult result = session.run(tx);
+            StatementResult result = session.run(tx, Values.parameters(
+                    "cluster", cluster,
+                    "marketGroup", marketGroup,
+                    "market", market,
+                    "customerGroup", customerGroup,
+                    "customerNumbers", customerNumbers
+            ));
 
-			while (result.hasNext()) {
-				Record r = result.next();
+            while (result.hasNext()) {
+                Record r = result.next();
 
-				// Add the calculated potential to the value list
-				double tempPotential = getValvePotential();
-				valueList.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				/*
+                // Add the calculated potential to the value list
+                double tempPotential = getValvePotential();
+                valueList.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+                        .doubleValue());
+                /*
 				 * Add total consumption divided by 3 (to get annual consumption
 				 * from 36 months sales history) to the value list
-				 */
-				double total = r.get("TotalQty").asDouble() / 3d;
+                 */
+                double total = r.get("TotalQty").asDouble() / 3d;
 
-				valueList
-						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				double ratio = 0d;
-				// Calculate the consumption ratio (consumed/potential), and
-				// handle division by zero exception
-				if (valueList.get(0) != 0d) {
-					ratio = total / tempPotential;
-				}
-				valueList
-						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valveFamilyMap.replace("Valve", valueList);
+                valueList
+                        .add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                double ratio = 0d;
+                // Calculate the consumption ratio (consumed/potential), and
+                // handle division by zero exception
+                if (valueList.get(0) != 0d) {
+                    ratio = total / tempPotential;
+                }
+                valueList
+                        .add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                valveFamilyMap.replace("Valve", valueList);
 
-			}
+            }
 
-			// *****************************************************************************************************
+            // *****************************************************************************************************
 
-			// Aggregate Valve sealing consumption grouped per customer group
-			List<Double> valueList1 = new ArrayList<>();
+            // Aggregate Valve sealing consumption grouped per customer group
+            List<Double> valueList1 = new ArrayList<>();
 
-			String tx1 = makeFamilyMapQueryStatement("HOM_VALVE SEALING");
+            String tx1 = makeFamilyMapQueryStatement("HOM_VALVE SEALING");
 
-			StatementResult result1 = session.run(tx1);
+            StatementResult result1 = session.run(tx1, Values.parameters(
+                    "cluster", cluster,
+                    "marketGroup", marketGroup,
+                    "market", market,
+                    "customerGroup", customerGroup,
+                    "customerNumbers", customerNumbers
+            ));
 
-			while (result1.hasNext()) {
-				Record r = result1.next();
+            while (result1.hasNext()) {
+                Record r = result1.next();
 
-				// Add the calculated potential to the value list
-				double tempPotential = getValveSealingPotential();
-				valueList1.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				/*
+                // Add the calculated potential to the value list
+                double tempPotential = getValveSealingPotential();
+                valueList1.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+                        .doubleValue());
+                /*
 				 * Add total consumption divided by 3 (to get annual consumption
 				 * from 36 months sales history) to the value list
-				 */
-				double total = r.get("TotalQty").asDouble() / 3d;
+                 */
+                double total = r.get("TotalQty").asDouble() / 3d;
 
-				valueList1
-						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				double ratio = 0d;
-				// Calculate the consumption ratio (consumed/potential), and
-				// handle division by zero exception
-				if (valueList1.get(0) != 0d) {
-					ratio = total / tempPotential;
-				}
-				valueList1
-						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valveFamilyMap.replace("Valve sealing", valueList1);
+                valueList1
+                        .add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                double ratio = 0d;
+                // Calculate the consumption ratio (consumed/potential), and
+                // handle division by zero exception
+                if (valueList1.get(0) != 0d) {
+                    ratio = total / tempPotential;
+                }
+                valueList1
+                        .add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                valveFamilyMap.replace("Valve sealing", valueList1);
 
-			}
+            }
 
-			// *****************************************************************************************************
+            // *****************************************************************************************************
 
-			// Aggregate Valve seat consumption grouped per customer group
-			List<Double> valueList2 = new ArrayList<>();
+            // Aggregate Valve seat consumption grouped per customer group
+            List<Double> valueList2 = new ArrayList<>();
 
-			String tx2 = makeFamilyMapQueryStatement("HOM_VALVE SEAT");
+            String tx2 = makeFamilyMapQueryStatement("HOM_VALVE SEAT");
 
-			StatementResult result2 = session.run(tx2);
+            StatementResult result2 = session.run(tx2, Values.parameters(
+                    "cluster", cluster,
+                    "marketGroup", marketGroup,
+                    "market", market,
+                    "customerGroup", customerGroup,
+                    "customerNumbers", customerNumbers
+            ));
 
-			while (result2.hasNext()) {
-				Record r = result2.next();
+            while (result2.hasNext()) {
+                Record r = result2.next();
 
-				// Add the calculated potential to the value list
-				double tempPotential = getValveSeatPotential();
-				valueList2.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				/*
+                // Add the calculated potential to the value list
+                double tempPotential = getValveSeatPotential();
+                valueList2.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+                        .doubleValue());
+                /*
 				 * Add total consumption divided by 3 (to get annual consumption
 				 * from 36 months sales history) to the value list
-				 */
-				double total = r.get("TotalQty").asDouble() / 3d;
+                 */
+                double total = r.get("TotalQty").asDouble() / 3d;
 
-				valueList2
-						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				double ratio = 0d;
-				// Calculate the consumption ratio (consumed/potential), and
-				// handle division by zero exception
-				if (valueList2.get(0) != 0d) {
-					ratio = total / tempPotential;
-				}
-				valueList2
-						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				valveFamilyMap.replace("Valve seat", valueList2);
+                valueList2
+                        .add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                double ratio = 0d;
+                // Calculate the consumption ratio (consumed/potential), and
+                // handle division by zero exception
+                if (valueList2.get(0) != 0d) {
+                    ratio = total / tempPotential;
+                }
+                valueList2
+                        .add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                valveFamilyMap.replace("Valve seat", valueList2);
 
-			}
+            }
 
-			// *****************************************************************************************************
+            // *****************************************************************************************************
 
-		} catch (ClientException e) {
-			System.err.println("Exception in 'getValveFamilyMap()':" + e);
-		} finally {
-			// neoDbProvider.closeNeo4jDriver();
+        } catch (ClientException e) {
+            System.err.println("Exception in 'getValveFamilyMap()':" + e);
+        } finally {
+            // neoDbProvider.closeNeo4jDriver();
 
-		}
+        }
 
-		return valveFamilyMap;
-	}
+        return valveFamilyMap;
+    }
 
 	/**
 	 * @return the crankcaseFamilyMap
 	 */
-	public Map<String, List<Double>> getCrankcaseFamilyMap() {
+	   public Map<String, List<Double>> getCrankcaseFamilyMap() {
 
-		// System.out.println("I'm in the getCrankcaseFamilyMap");
+        // System.out.println("I'm in the getCrankcaseFamilyMap");
 
-		// code query here
-		try (Session session = NeoDbProvider.getDriver().session()) {
-			// Aggregate Plain bearing consumption grouped per customer group
-			List<Double> valueList = new ArrayList<>();
+        // code query here
+        try (Session session = NeoDbProvider.getDriver().session()) {
+            // Aggregate Plain bearing consumption grouped per customer group
+            List<Double> valueList = new ArrayList<>();
 
-			String tx = makeFamilyMapQueryStatement("HOM_PLAIN BEARING");
+            String tx = makeFamilyMapQueryStatement("HOM_PLAIN BEARING");
 
-			StatementResult result = session.run(tx);
+            StatementResult result = session.run(tx, Values.parameters(
+                    "cluster", cluster,
+                    "marketGroup", marketGroup,
+                    "market", market,
+                    "customerGroup", customerGroup,
+                    "customerNumbers", customerNumbers
+            ));
 
-			while (result.hasNext()) {
-				Record r = result.next();
+            while (result.hasNext()) {
+                Record r = result.next();
 
-				// Add the calculated potential to the value list
-				double tempPotential = getPlainBearingPotential();
-				valueList.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				/*
+                // Add the calculated potential to the value list
+                double tempPotential = getPlainBearingPotential();
+                valueList.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+                        .doubleValue());
+                /*
 				 * Add total consumption divided by 3 (to get annual consumption
 				 * from 36 months sales history) to the value list
-				 */
-				double total = r.get("TotalQty").asDouble() / 3d;
+                 */
+                double total = r.get("TotalQty").asDouble() / 3d;
 
-				valueList
-						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				double ratio = 0d;
-				// Calculate the consumption ratio (consumed/potential), and
-				// handle division by zero exception
-				if (valueList.get(0) != 0d) {
-					ratio = total / tempPotential;
-				}
-				valueList
-						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				crankcaseFamilyMap.replace("Plain bearing", valueList);
+                valueList
+                        .add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                double ratio = 0d;
+                // Calculate the consumption ratio (consumed/potential), and
+                // handle division by zero exception
+                if (valueList.get(0) != 0d) {
+                    ratio = total / tempPotential;
+                }
+                valueList
+                        .add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                crankcaseFamilyMap.replace("Plain bearing", valueList);
 
-			}
+            }
 
-			// *****************************************************************************************************
+            // *****************************************************************************************************
 
-			// Aggregate Roller bearing consumption grouped per customer group
-			List<Double> valueList1 = new ArrayList<>();
+            // Aggregate Roller bearing consumption grouped per customer group
+            List<Double> valueList1 = new ArrayList<>();
 
-			String tx1 = makeFamilyMapQueryStatement("HOM_ROLLER BEARING");
+            String tx1 = makeFamilyMapQueryStatement("HOM_ROLLER BEARING");
 
-			StatementResult result1 = session.run(tx1);
+            StatementResult result1 = session.run(tx1, Values.parameters(
+                    "cluster", cluster,
+                    "marketGroup", marketGroup,
+                    "market", market,
+                    "customerGroup", customerGroup,
+                    "customerNumbers", customerNumbers
+            ));
 
-			while (result1.hasNext()) {
-				Record r = result1.next();
+            while (result1.hasNext()) {
+                Record r = result1.next();
 
-				// Add the calculated potential to the value list
-				double tempPotential = getRollerBearingPotential();
-				valueList1.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				/*
+                // Add the calculated potential to the value list
+                double tempPotential = getRollerBearingPotential();
+                valueList1.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+                        .doubleValue());
+                /*
 				 * Add total consumption divided by 3 (to get annual consumption
 				 * from 36 months sales history) to the value list
-				 */
-				double total = r.get("TotalQty").asDouble() / 3d;
+                 */
+                double total = r.get("TotalQty").asDouble() / 3d;
 
-				valueList1
-						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				double ratio = 0d;
-				// Calculate the consumption ratio (consumed/potential), and
-				// handle division by zero exception
-				if (valueList1.get(0) != 0d) {
-					ratio = total / tempPotential;
-				}
-				valueList1
-						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				crankcaseFamilyMap.replace("Roller bearing", valueList1);
+                valueList1
+                        .add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                double ratio = 0d;
+                // Calculate the consumption ratio (consumed/potential), and
+                // handle division by zero exception
+                if (valueList1.get(0) != 0d) {
+                    ratio = total / tempPotential;
+                }
+                valueList1
+                        .add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                crankcaseFamilyMap.replace("Roller bearing", valueList1);
 
-			}
+            }
 
-			// *****************************************************************************************************
+            // *****************************************************************************************************
 
-			// Aggregate Bellow consumption grouped per customer group
-			List<Double> valueList2 = new ArrayList<>();
+            // Aggregate Bellow consumption grouped per customer group
+            List<Double> valueList2 = new ArrayList<>();
 
-			String tx2 = makeFamilyMapQueryStatement("HOM_BELLOWS");
+            String tx2 = makeFamilyMapQueryStatement("HOM_BELLOWS");
 
-			StatementResult result2 = session.run(tx2);
+            StatementResult result2 = session.run(tx2, Values.parameters(
+                    "cluster", cluster,
+                    "marketGroup", marketGroup,
+                    "market", market,
+                    "customerGroup", customerGroup,
+                    "customerNumbers", customerNumbers
+            ));
 
-			while (result2.hasNext()) {
-				Record r = result2.next();
+            while (result2.hasNext()) {
+                Record r = result2.next();
 
-				// Add the calculated potential to the value list
-				double tempPotential = getBellowPotential();
-				valueList2.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
-						.doubleValue());
-				/*
+                // Add the calculated potential to the value list
+                double tempPotential = getBellowPotential();
+                valueList2.add(new BigDecimal(String.valueOf(tempPotential)).setScale(1, BigDecimal.ROUND_HALF_UP)
+                        .doubleValue());
+                /*
 				 * Add total consumption divided by 3 (to get annual consumption
 				 * from 36 months sales history) to the value list
-				 */
-				double total = r.get("TotalQty").asDouble() / 3d;
-
-				valueList2
-						.add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				double ratio = 0d;
-				// Calculate the consumption ratio (consumed/potential), and
-				// handle division by zero exception
-				if (valueList2.get(0) != 0d) {
-					ratio = total / tempPotential;
-				}
-				valueList2
-						.add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
-				crankcaseFamilyMap.replace("Bellow", valueList2);
-
-			}
-
-			// *****************************************************************************************************
-
-		} catch (ClientException e) {
-			System.err.println("Exception in 'getCrankcaseFamilyMap()':" + e);
-		} finally {
-			// neoDbProvider.closeNeo4jDriver();
-
-		}
-
-		return crankcaseFamilyMap;
-	}
-
-	/**
-	 * @return the pistonPotential
-	 */
-
-	public double getPistonPotential() {
-
-		if (pistonPotential == null) {
-
-			// code query here
-			double tempPotential = 0d;
-			try (Session session = NeoDbProvider.getDriver().session()) {
-
-				String tx = makePotentialsQueryStatement("Piston");
-
-				StatementResult result = session.run(tx);
-
-				while (result.hasNext()) {
-					Record r = result.next();
-					tempPotential = r.get("Potential").asDouble();
-				}
-
-				// System.out.printf("%s > Queried Potential for
-				// 'pistonPotential' is %s\n",
-				// LocalDateTime.now(),tempPotential);
-
-			} catch (ClientException e) {
-				System.err.println("Exception in 'getPistonPotential()':" + e);
-			} finally {
-			}
-			pistonPotential = tempPotential;
-		}
-		return pistonPotential;
-	}
-
-	/**
-	 * @return the pistonSealPotential
-	 */
-
-	public double getPistonSealPotential() {
-
-		if (pistonSealPotential == null) {
-
-			// code query here
-			double tempPotential = 0d;
-			try (Session session = NeoDbProvider.getDriver().session()) {
-
-				String tx = makePotentialsQueryStatement("PistonSeal");
-
-				StatementResult result = session.run(tx);
-
-				while (result.hasNext()) {
-					Record r = result.next();
-					tempPotential = r.get("Potential").asDouble();
-				}
-
-				// System.out.printf("%s > Queried Potential for
-				// 'pistonSealPotential' is %s\n", LocalDateTime.now(),
-				// tempPotential);
-
-			} catch (ClientException e) {
-				System.err.println("Exception in 'getPistonSealPotential()':" + e);
-			} finally {
-			}
-			pistonSealPotential = tempPotential;
-		}
-
-		return pistonSealPotential;
-	}
-
-	/**
-	 * @return the compressionRingPotential
-	 */
-
-	public double getCompressionRingPotential() {
-
-		if (compressionRingPotential == null) {
-
-			// code query here
-			double tempPotential = 0d;
-			try (Session session = NeoDbProvider.getDriver().session()) {
-
-				String tx = makePotentialsQueryStatement("CompressionRing");
-
-				StatementResult result = session.run(tx);
-
-				while (result.hasNext()) {
-					Record r = result.next();
-					tempPotential = r.get("Potential").asDouble();
-				}
-
-				// System.out.printf("%s > Queried Potential for
-				// 'compressionRingPotential' is %s\n", LocalDateTime.now(),
-				// tempPotential);
-
-			} catch (ClientException e) {
-				System.err.println("Exception in 'getCompressionRingPotential()':" + e);
-			} finally {
-			}
-			compressionRingPotential = tempPotential;
-		}
-
-		return compressionRingPotential;
-	}
-
-	/**
-	 * @return the forcerPotential
-	 */
-
-	public double getForcerPotential() {
-
-		if (forcerPotential == null) {
-
-			// code query here
-			double tempPotential = 0d;
-			try (Session session = NeoDbProvider.getDriver().session()) {
-
-				String tx = makePotentialsQueryStatement("Forcer");
-
-				StatementResult result = session.run(tx);
-
-				while (result.hasNext()) {
-					Record r = result.next();
-					tempPotential = r.get("Potential").asDouble();
-				}
-
-				// System.out.printf("%s > Queried Potential for
-				// 'forcerPotential' is %s\n", LocalDateTime.now(),
-				// tempPotential);
-
-			} catch (ClientException e) {
-				System.err.println("Exception in 'getForcerPotential()':" + e);
-			} finally {
-			}
-			forcerPotential = tempPotential;
-		}
-
-		return forcerPotential;
-	}
-
-	/**
-	 * @return the impactRingPotential
-	 */
-
-	public double getImpactRingPotential() {
-
-		if (impactRingPotential == null) {
-
-			// code query here
-			double tempPotential = 0d;
-			try (Session session = NeoDbProvider.getDriver().session()) {
-
-				String tx = makePotentialsQueryStatement("ImpactRing");
-
-				StatementResult result = session.run(tx);
-
-				while (result.hasNext()) {
-					Record r = result.next();
-					tempPotential = r.get("Potential").asDouble();
-				}
-
-				// System.out.printf("%s > Queried Potential for
-				// 'impactRingPotential' is %s\n", LocalDateTime.now(),
-				// tempPotential);
-
-			} catch (ClientException e) {
-				System.err.println("Exception in 'getImpactRingPotential()':" + e);
-			} finally {
-			}
-			impactRingPotential = tempPotential;
-		}
-
-		return impactRingPotential;
-	}
-
-	/**
-	 * @return the forcerSeatPotential
-	 */
-
-	public double getForcerSeatPotential() {
-
-		if (forcerSeatPotential == null) {
-
-			// code query here
-			double tempPotential = 0d;
-			try (Session session = NeoDbProvider.getDriver().session()) {
-
-				String tx = makePotentialsQueryStatement("Seat");
-
-				StatementResult result = session.run(tx);
-
-				while (result.hasNext()) {
-					Record r = result.next();
-					tempPotential = r.get("Potential").asDouble();
-				}
-
-				// System.out.printf("%s > Queried Potential for
-				// 'forcerSeatPotential' is %s\n", LocalDateTime.now(),
-				// tempPotential);
-
-			} catch (ClientException e) {
-				System.err.println("Exception in 'getForcerSeatPotential()':" + e);
-			} finally {
-			}
-			forcerSeatPotential = tempPotential;
-		}
-
-		return forcerSeatPotential;
-	}
-
-	/**
-	 * @return the valvePotential
-	 */
-
-	public double getValvePotential() {
-
-		if (valvePotential == null) {
-
-			// code query here
-			double tempPotential = 0d;
-			try (Session session = NeoDbProvider.getDriver().session()) {
-
-				String tx = makePotentialsQueryStatement("Valve");
-
-				StatementResult result = session.run(tx);
-
-				while (result.hasNext()) {
-					Record r = result.next();
-					tempPotential = r.get("Potential").asDouble();
-				}
-
-				// System.out.printf("%s > Queried Potential for
-				// 'valvePotential' is %s\n", LocalDateTime.now(),
-				// tempPotential);
-
-			} catch (ClientException e) {
-				System.err.println("Exception in 'getValvePotential()':" + e);
-			} finally {
-			}
-			valvePotential = tempPotential;
-		}
-
-		return valvePotential;
-	}
-
-	/**
-	 * @return the valveSealingPotential
-	 */
-
-	public double getValveSealingPotential() {
-
-		if (valveSealingPotential == null) {
-
-			// code query here
-			double tempPotential = 0d;
-			try (Session session = NeoDbProvider.getDriver().session()) {
-
-				String tx = makePotentialsQueryStatement("ValveSealing");
-
-				StatementResult result = session.run(tx);
-
-				while (result.hasNext()) {
-					Record r = result.next();
-					tempPotential = r.get("Potential").asDouble();
-				}
-
-				// System.out.printf("%s > Queried Potential for
-				// 'valveSealingPotential' is %s\n", LocalDateTime.now(),
-				// tempPotential);
-
-			} catch (ClientException e) {
-				System.err.println("Exception in 'getValveSealingPotential()':" + e);
-			} finally {
-			}
-			valveSealingPotential = tempPotential;
-		}
-
-		return valveSealingPotential;
-	}
-
-	/**
-	 * @return the valveSeatPotential
-	 */
-
-	public double getValveSeatPotential() {
-
-		if (valveSeatPotential == null) {
-
-			// code query here
-			double tempPotential = 0d;
-			try (Session session = NeoDbProvider.getDriver().session()) {
-
-				String tx = makePotentialsQueryStatement("ValveSeat");
-
-				StatementResult result = session.run(tx);
-
-				while (result.hasNext()) {
-					Record r = result.next();
-					tempPotential = r.get("Potential").asDouble();
-				}
-
-				// System.out.printf("%s > Queried Potential for
-				// 'valveSeatPotential' is %s\n", LocalDateTime.now(),
-				// tempPotential);
-
-			} catch (ClientException e) {
-				System.err.println("Exception in 'getValveSeatPotential()':" + e);
-			} finally {
-			}
-			valveSeatPotential = tempPotential;
-		}
-
-		return valveSeatPotential;
-	}
-
-	/**
-	 * @return the plainBearingPotential
-	 */
-
-	public double getPlainBearingPotential() {
-
-		if (plainBearingPotential == null) {
-
-			// code query here
-			double tempPotential = 0d;
-			try (Session session = NeoDbProvider.getDriver().session()) {
-
-				String tx = makePotentialsQueryStatement("PlainBearing");
-
-				StatementResult result = session.run(tx);
-
-				while (result.hasNext()) {
-					Record r = result.next();
-					tempPotential = r.get("Potential").asDouble();
-				}
-
-				// System.out.printf("%s > Queried Potential for
-				// 'plainBearingPotential' is %s\n", LocalDateTime.now(),
-				// tempPotential);
-
-			} catch (ClientException e) {
-				System.err.println("Exception in 'getPlainBearingPotential()':" + e);
-			} finally {
-			}
-			plainBearingPotential = tempPotential;
-		}
-
-		return plainBearingPotential;
-	}
-
-	/**
-	 * @return the rollerBearingPotential
-	 */
-
-	public double getRollerBearingPotential() {
-
-		if (rollerBearingPotential == null) {
-
-			// code query here
-			double tempPotential = 0d;
-			try (Session session = NeoDbProvider.getDriver().session()) {
-
-				String tx = makePotentialsQueryStatement("RollerBearing");
-
-				StatementResult result = session.run(tx);
-
-				while (result.hasNext()) {
-					Record r = result.next();
-					tempPotential = r.get("Potential").asDouble();
-				}
-
-				// System.out.printf("%s > Queried Potential for
-				// 'rollerBearingPotential' is %s\n", LocalDateTime.now(),
-				// tempPotential);
-
-			} catch (ClientException e) {
-				System.err.println("Exception in 'getRollerBearingPotential()':" + e);
-			} finally {
-			}
-			rollerBearingPotential = tempPotential;
-		}
-
-		return rollerBearingPotential;
-	}
-
-	/**
-	 * @return the bellowPotential
-	 */
-
-	public double getBellowPotential() {
-
-		if (bellowPotential == null) {
-
-			// code query here
-			double tempPotential = 0d;
-			try (Session session = NeoDbProvider.getDriver().session()) {
-
-				String tx = makePotentialsQueryStatement("Bellow");
-
-				StatementResult result = session.run(tx);
-
-				while (result.hasNext()) {
-					Record r = result.next();
-					tempPotential = r.get("Potential").asDouble();
-				}
-
-				// System.out.printf("%s > Queried Potential for
-				// 'bellowPotential' is %s\n", LocalDateTime.now(),
-				// tempPotential);
-
-			} catch (ClientException e) {
-				System.err.println("Exception in 'getBellowPotential()':" + e);
-			} finally {
-			}
-			bellowPotential = tempPotential;
-		}
-
-		return bellowPotential;
-	}
+                 */
+                double total = r.get("TotalQty").asDouble() / 3d;
+
+                valueList2
+                        .add(new BigDecimal(String.valueOf(total)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                double ratio = 0d;
+                // Calculate the consumption ratio (consumed/potential), and
+                // handle division by zero exception
+                if (valueList2.get(0) != 0d) {
+                    ratio = total / tempPotential;
+                }
+                valueList2
+                        .add(new BigDecimal(String.valueOf(ratio)).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue());
+                crankcaseFamilyMap.replace("Bellow", valueList2);
+
+            }
+
+            // *****************************************************************************************************
+
+        } catch (ClientException e) {
+            System.err.println("Exception in 'getCrankcaseFamilyMap()':" + e);
+        } finally {
+            // neoDbProvider.closeNeo4jDriver();
+
+        }
+
+        return crankcaseFamilyMap;
+    }
+
+     /**
+     * @return the pistonPotential
+     */
+    public double getPistonPotential() {
+
+        if (pistonPotential == null) {
+
+            // code query here
+            double tempPotential = 0d;
+            try (Session session = NeoDbProvider.getDriver().session()) {
+
+                String tx = makePotentialsQueryStatement("Piston");
+
+                StatementResult result = session.run(tx, Values.parameters(
+                        "cluster", cluster,
+                        "marketGroup", marketGroup,
+                        "market", market,
+                        "customerGroup", customerGroup,
+                        "customerNumbers", customerNumbers
+                ));
+
+                while (result.hasNext()) {
+                    Record r = result.next();
+                    tempPotential = r.get("Potential").asDouble();
+                }
+
+                // System.out.printf("%s > Queried Potential for
+                // 'pistonPotential' is %s\n",
+                // LocalDateTime.now(),tempPotential);
+
+            } catch (ClientException e) {
+                System.err.println("Exception in 'getPistonPotential()':" + e);
+            } finally {
+            }
+            pistonPotential = tempPotential;
+        }
+        return pistonPotential;
+    }
+
+    /**
+     * @return the pistonSealPotential
+     */
+    public double getPistonSealPotential() {
+
+        if (pistonSealPotential == null) {
+
+            // code query here
+            double tempPotential = 0d;
+            try (Session session = NeoDbProvider.getDriver().session()) {
+
+                String tx = makePotentialsQueryStatement("PistonSeal");
+
+                StatementResult result = session.run(tx, Values.parameters(
+                        "cluster", cluster,
+                        "marketGroup", marketGroup,
+                        "market", market,
+                        "customerGroup", customerGroup,
+                        "customerNumbers", customerNumbers
+                ));
+
+                while (result.hasNext()) {
+                    Record r = result.next();
+                    tempPotential = r.get("Potential").asDouble();
+                }
+
+                // System.out.printf("%s > Queried Potential for
+                // 'pistonSealPotential' is %s\n", LocalDateTime.now(),
+                // tempPotential);
+
+            } catch (ClientException e) {
+                System.err.println("Exception in 'getPistonSealPotential()':" + e);
+            } finally {
+            }
+            pistonSealPotential = tempPotential;
+        }
+
+        return pistonSealPotential;
+    }
+
+    /**
+     * @return the compressionRingPotential
+     */
+    public double getCompressionRingPotential() {
+
+        if (compressionRingPotential == null) {
+
+            // code query here
+            double tempPotential = 0d;
+            try (Session session = NeoDbProvider.getDriver().session()) {
+
+                String tx = makePotentialsQueryStatement("CompressionRing");
+
+                StatementResult result = session.run(tx, Values.parameters(
+                        "cluster", cluster,
+                        "marketGroup", marketGroup,
+                        "market", market,
+                        "customerGroup", customerGroup,
+                        "customerNumbers", customerNumbers
+                ));
+
+                while (result.hasNext()) {
+                    Record r = result.next();
+                    tempPotential = r.get("Potential").asDouble();
+                }
+
+                // System.out.printf("%s > Queried Potential for
+                // 'compressionRingPotential' is %s\n", LocalDateTime.now(),
+                // tempPotential);
+
+            } catch (ClientException e) {
+                System.err.println("Exception in 'getCompressionRingPotential()':" + e);
+            } finally {
+            }
+            compressionRingPotential = tempPotential;
+        }
+
+        return compressionRingPotential;
+    }
+
+    /**
+     * @return the forcerPotential
+     */
+    public double getForcerPotential() {
+
+        if (forcerPotential == null) {
+
+            // code query here
+            double tempPotential = 0d;
+            try (Session session = NeoDbProvider.getDriver().session()) {
+
+                String tx = makePotentialsQueryStatement("Forcer");
+
+                StatementResult result = session.run(tx, Values.parameters(
+                        "cluster", cluster,
+                        "marketGroup", marketGroup,
+                        "market", market,
+                        "customerGroup", customerGroup,
+                        "customerNumbers", customerNumbers
+                ));
+
+                while (result.hasNext()) {
+                    Record r = result.next();
+                    tempPotential = r.get("Potential").asDouble();
+                }
+
+                // System.out.printf("%s > Queried Potential for
+                // 'forcerPotential' is %s\n", LocalDateTime.now(),
+                // tempPotential);
+
+            } catch (ClientException e) {
+                System.err.println("Exception in 'getForcerPotential()':" + e);
+            } finally {
+            }
+            forcerPotential = tempPotential;
+        }
+
+        return forcerPotential;
+    }
+
+    /**
+     * @return the impactRingPotential
+     */
+    public double getImpactRingPotential() {
+
+        if (impactRingPotential == null) {
+
+            // code query here
+            double tempPotential = 0d;
+            try (Session session = NeoDbProvider.getDriver().session()) {
+
+                String tx = makePotentialsQueryStatement("ImpactRing");
+
+                StatementResult result = session.run(tx, Values.parameters(
+                        "cluster", cluster,
+                        "marketGroup", marketGroup,
+                        "market", market,
+                        "customerGroup", customerGroup,
+                        "customerNumbers", customerNumbers
+                ));
+
+                while (result.hasNext()) {
+                    Record r = result.next();
+                    tempPotential = r.get("Potential").asDouble();
+                }
+
+                // System.out.printf("%s > Queried Potential for
+                // 'impactRingPotential' is %s\n", LocalDateTime.now(),
+                // tempPotential);
+
+            } catch (ClientException e) {
+                System.err.println("Exception in 'getImpactRingPotential()':" + e);
+            } finally {
+            }
+            impactRingPotential = tempPotential;
+        }
+
+        return impactRingPotential;
+    }
+
+    /**
+     * @return the forcerSeatPotential
+     */
+    public double getForcerSeatPotential() {
+
+        if (forcerSeatPotential == null) {
+
+            // code query here
+            double tempPotential = 0d;
+            try (Session session = NeoDbProvider.getDriver().session()) {
+
+                String tx = makePotentialsQueryStatement("Seat");
+
+                StatementResult result = session.run(tx, Values.parameters(
+                        "cluster", cluster,
+                        "marketGroup", marketGroup,
+                        "market", market,
+                        "customerGroup", customerGroup,
+                        "customerNumbers", customerNumbers
+                ));
+
+                while (result.hasNext()) {
+                    Record r = result.next();
+                    tempPotential = r.get("Potential").asDouble();
+                }
+
+                // System.out.printf("%s > Queried Potential for
+                // 'forcerSeatPotential' is %s\n", LocalDateTime.now(),
+                // tempPotential);
+
+            } catch (ClientException e) {
+                System.err.println("Exception in 'getForcerSeatPotential()':" + e);
+            } finally {
+            }
+            forcerSeatPotential = tempPotential;
+        }
+
+        return forcerSeatPotential;
+    }
+
+    /**
+     * @return the valvePotential
+     */
+    public double getValvePotential() {
+
+        if (valvePotential == null) {
+
+            // code query here
+            double tempPotential = 0d;
+            try (Session session = NeoDbProvider.getDriver().session()) {
+
+                String tx = makePotentialsQueryStatement("Valve");
+
+                StatementResult result = session.run(tx, Values.parameters(
+                        "cluster", cluster,
+                        "marketGroup", marketGroup,
+                        "market", market,
+                        "customerGroup", customerGroup,
+                        "customerNumbers", customerNumbers
+                ));
+
+                while (result.hasNext()) {
+                    Record r = result.next();
+                    tempPotential = r.get("Potential").asDouble();
+                }
+
+                // System.out.printf("%s > Queried Potential for
+                // 'valvePotential' is %s\n", LocalDateTime.now(),
+                // tempPotential);
+
+            } catch (ClientException e) {
+                System.err.println("Exception in 'getValvePotential()':" + e);
+            } finally {
+            }
+            valvePotential = tempPotential;
+        }
+
+        return valvePotential;
+    }
+
+    /**
+     * @return the valveSealingPotential
+     */
+    public double getValveSealingPotential() {
+
+        if (valveSealingPotential == null) {
+
+            // code query here
+            double tempPotential = 0d;
+            try (Session session = NeoDbProvider.getDriver().session()) {
+
+                String tx = makePotentialsQueryStatement("ValveSealing");
+
+                StatementResult result = session.run(tx, Values.parameters(
+                        "cluster", cluster,
+                        "marketGroup", marketGroup,
+                        "market", market,
+                        "customerGroup", customerGroup,
+                        "customerNumbers", customerNumbers
+                ));
+
+                while (result.hasNext()) {
+                    Record r = result.next();
+                    tempPotential = r.get("Potential").asDouble();
+                }
+
+                // System.out.printf("%s > Queried Potential for
+                // 'valveSealingPotential' is %s\n", LocalDateTime.now(),
+                // tempPotential);
+
+            } catch (ClientException e) {
+                System.err.println("Exception in 'getValveSealingPotential()':" + e);
+            } finally {
+            }
+            valveSealingPotential = tempPotential;
+        }
+
+        return valveSealingPotential;
+    }
+
+    /**
+     * @return the valveSeatPotential
+     */
+    public double getValveSeatPotential() {
+
+        if (valveSeatPotential == null) {
+
+            // code query here
+            double tempPotential = 0d;
+            try (Session session = NeoDbProvider.getDriver().session()) {
+
+                String tx = makePotentialsQueryStatement("ValveSeat");
+
+                StatementResult result = session.run(tx, Values.parameters(
+                        "cluster", cluster,
+                        "marketGroup", marketGroup,
+                        "market", market,
+                        "customerGroup", customerGroup,
+                        "customerNumbers", customerNumbers
+                ));
+
+                while (result.hasNext()) {
+                    Record r = result.next();
+                    tempPotential = r.get("Potential").asDouble();
+                }
+
+                // System.out.printf("%s > Queried Potential for
+                // 'valveSeatPotential' is %s\n", LocalDateTime.now(),
+                // tempPotential);
+
+            } catch (ClientException e) {
+                System.err.println("Exception in 'getValveSeatPotential()':" + e);
+            } finally {
+            }
+            valveSeatPotential = tempPotential;
+        }
+
+        return valveSeatPotential;
+    }
+
+    /**
+     * @return the plainBearingPotential
+     */
+    public double getPlainBearingPotential() {
+
+        if (plainBearingPotential == null) {
+
+            // code query here
+            double tempPotential = 0d;
+            try (Session session = NeoDbProvider.getDriver().session()) {
+
+                String tx = makePotentialsQueryStatement("PlainBearing");
+
+                StatementResult result = session.run(tx, Values.parameters(
+                        "cluster", cluster,
+                        "marketGroup", marketGroup,
+                        "market", market,
+                        "customerGroup", customerGroup,
+                        "customerNumbers", customerNumbers
+                ));
+
+                while (result.hasNext()) {
+                    Record r = result.next();
+                    tempPotential = r.get("Potential").asDouble();
+                }
+
+                // System.out.printf("%s > Queried Potential for
+                // 'plainBearingPotential' is %s\n", LocalDateTime.now(),
+                // tempPotential);
+
+            } catch (ClientException e) {
+                System.err.println("Exception in 'getPlainBearingPotential()':" + e);
+            } finally {
+            }
+            plainBearingPotential = tempPotential;
+        }
+
+        return plainBearingPotential;
+    }
+
+    /**
+     * @return the rollerBearingPotential
+     */
+    public double getRollerBearingPotential() {
+
+        if (rollerBearingPotential == null) {
+
+            // code query here
+            double tempPotential = 0d;
+            try (Session session = NeoDbProvider.getDriver().session()) {
+
+                String tx = makePotentialsQueryStatement("RollerBearing");
+
+                StatementResult result = session.run(tx, Values.parameters(
+                        "cluster", cluster,
+                        "marketGroup", marketGroup,
+                        "market", market,
+                        "customerGroup", customerGroup,
+                        "customerNumbers", customerNumbers
+                ));
+
+                while (result.hasNext()) {
+                    Record r = result.next();
+                    tempPotential = r.get("Potential").asDouble();
+                }
+
+                // System.out.printf("%s > Queried Potential for
+                // 'rollerBearingPotential' is %s\n", LocalDateTime.now(),
+                // tempPotential);
+
+            } catch (ClientException e) {
+                System.err.println("Exception in 'getRollerBearingPotential()':" + e);
+            } finally {
+            }
+            rollerBearingPotential = tempPotential;
+        }
+
+        return rollerBearingPotential;
+    }
+
+    /**
+     * @return the bellowPotential
+     */
+    public double getBellowPotential() {
+
+        if (bellowPotential == null) {
+
+            // code query here
+            double tempPotential = 0d;
+            try (Session session = NeoDbProvider.getDriver().session()) {
+
+                String tx = makePotentialsQueryStatement("Bellow");
+
+                StatementResult result = session.run(tx, Values.parameters(
+                        "cluster", cluster,
+                        "marketGroup", marketGroup,
+                        "market", market,
+                        "customerGroup", customerGroup,
+                        "customerNumbers", customerNumbers
+                ));
+
+                while (result.hasNext()) {
+                    Record r = result.next();
+                    tempPotential = r.get("Potential").asDouble();
+                }
+
+                // System.out.printf("%s > Queried Potential for
+                // 'bellowPotential' is %s\n", LocalDateTime.now(),
+                // tempPotential);
+
+            } catch (ClientException e) {
+                System.err.println("Exception in 'getBellowPotential()':" + e);
+            } finally {
+            }
+            bellowPotential = tempPotential;
+        }
+
+        return bellowPotential;
+    }
 
 }
